@@ -2,12 +2,12 @@
 #include "rrt.h"
 
 //register this planner as a BaseGlobalPlanner plugin
-PLUGINLIB_EXPORT_CLASS(global_planner::GlobalPlanner, nav_core::BaseGlobalPlanner)
+PLUGINLIB_EXPORT_CLASS(rrt_planner::GlobalPlanner, nav_core::BaseGlobalPlanner)
 
  	using namespace std;
 
  	//Default Constructor
- 	namespace burger_planner {
+ 	namespace rrt_planner {
 
  		GlobalPlanner::GlobalPlanner (){
 

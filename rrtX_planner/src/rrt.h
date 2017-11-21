@@ -11,10 +11,10 @@
 
 using std::string;
 
-#ifndef GLOBAL_PLANNER_CPP
-#define GLOBAL_PLANNER_CPP
+#ifndef RRT_PLANNER_CPP
+#define RRT_PLANNER_CPP
 
-namespace global_planner {
+namespace rrt_planner {
 
  	class GlobalPlanner : public nav_core::BaseGlobalPlanner {
  		public:
