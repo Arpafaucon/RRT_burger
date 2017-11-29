@@ -50,7 +50,7 @@ PLUGINLIB_EXPORT_CLASS(rrt_planner::RRTPlanner, nav_core::BaseGlobalPlanner)
 	 	}
 	 	
 	 	  //we need to take the footprint of the robot into account when we calculate cost to obstacles
-  		double RRTPlanner::footprintCost(double x_i, double y_i, double theta_i)
+  		double CarrotPlanner::footprintCost(double x_i, double y_i, double theta_i)
   		{
     		if(!initialized_)
     		{

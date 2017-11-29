@@ -8,8 +8,10 @@ project(rrt_planner)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-roscpp
-pluginlib
+  pluginlib
+  roscpp
+  base_local_planner
+  angles
 )
 
 ## System dependencies are found with CMake's conventions
@@ -116,7 +118,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
 include
-# ${catkin_INCLUDE_DIRS}
+ ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
