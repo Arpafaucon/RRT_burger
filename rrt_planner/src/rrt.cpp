@@ -4,68 +4,85 @@
 //register this planner as a BaseGlobalPlanner plugin
 PLUGINLIB_EXPORT_CLASS(rrt_planner::RRTPlanner, nav_core::BaseGlobalPlanner)
 
- 	using namespace std;
+using namespace std;
+using namespace tf;
 
- 	//Default Constructor
- 	namespace rrt_planner 
- 	{
- 		RRTPlanner::RRTPlanner ()
- 		{
- 		}
+//Default Constructor
+namespace rrt_planner
+{
+RRTPlanner::RRTPlanner()
+{
+	//initialize("Whohohohohoh", costmap_2d::Costmap2DROS:: ;
+}
 
+RRTPlanner::RRTPlanner(std::string name, costmap_2d::Costmap2DROS *costmap_ros)
+{
+	initialize(name, costmap_ros);
+}
 
- 		RRTPlanner::RRTPlanner(std::string name, costmap_2d::Costmap2DROS* costmap_ros)
- 		{
-   			initialize(name, costmap_ros);
- 		}
+void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS *costmap_ros)
+{
+	if (!initialized_)
+	{
+		ROS_INFO("Begin RRT Initialization");
+		costmap_ros_ = costmap_ros;			   //initialize the costmap_ros_ attribute to the parameter.
+		costmap_ = costmap_ros_->getCostmap(); //get the costmap_ from costmap_ros_
 
+		// initialize other planner parameters
+		ros::NodeHandle private_nh("~/" + name);
+		private_nh.param("step_size", step_size_, costmap_->getResolution());
+		private_nh.param("min_dist_from_robot", min_dist_from_robot_, 0.10);
+		world_model_ = new base_local_planner::CostmapModel(*costmap_);
 
- 		void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS* costmap_ros){
+		initialized_ = true;
+		ROS_INFO("End RRT Initialization");
+	}
+	else
+		ROS_WARN("This planner has already been initialized... doing nothing");
+}
 
- 		}
+bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometry_msgs::PoseStamped &goal,
+						  std::vector<geometry_msgs::PoseStamped> &plan)
+{
+	plan.push_back(start);
+	Pose startPose = myPoseStampedMsgToTF(start);
+	Pose goalPose = myPoseStampedMsgToTF(goal);
 
+	Transform difference = startPose.inverseTimes(goalPose);
 
- 		bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal, 
- 										                              std::vector<geometry_msgs::PoseStamped>& plan )
-		{
+	tf::Quaternion quat = difference.getRotation();
 
-			plan.push_back(start);
-	   		for (int i=0; i<20; i++)
-	   		{
-		 		geometry_msgs::PoseStamped new_goal = goal;
-		 		tf::Quaternion goal_quat = tf::createQuaternionFromYaw(1.54);
+	for (int i = 0; i < 20; i++)
+	{
+		geometry_msgs::PoseStamped inter_goal = goal;
 
-			  	new_goal.pose.position.x = -2.5+(0.05*i);
-			  	new_goal.pose.position.y = -3.5+(0.05*i);
+		inter_goal.pose.orientation = tf::createQuaternionMsgFromYaw(quat.getY());
 
-			  	new_goal.pose.orientation.x = goal_quat.x();
-			  	new_goal.pose.orientation.y = goal_quat.y();
-			  	new_goal.pose.orientation.z = goal_quat.z();
-			  	new_goal.pose.orientation.w = goal_quat.w();
+		inter_goal.pose.position.x = start.pose.position.x + (0.05 * i) * difference.getOrigin().getX();
+		inter_goal.pose.position.y = start.pose.position.y + (0.05 * i) * difference.getOrigin().getY();
 
-	   			plan.push_back(new_goal);
-	   		}
-	   		plan.push_back(goal);
-	  		return true;
-	 	}
-	 	
-	 	  //we need to take the footprint of the robot into account when we calculate cost to obstacles
-  		double RRTPlanner::footprintCost(double x_i, double y_i, double theta_i)
-  		{
-    		if(!initialized_)
-    		{
-			  	ROS_ERROR("The planner has not been initialized, please call initialize() to use the planner");
-			  	return -1.0;
-			}
+		plan.push_back(inter_goal);
+	}
+	plan.push_back(goal);
+	return true;
+}
 
-			std::vector<geometry_msgs::Point> footprint = costmap_ros_->getRobotFootprint();
-			//if we have no footprint... do nothing
-			if(footprint.size() < 3)
-			  	return -1.0;
+//we need to take the footprint of the robot into account when we calculate cost to obstacles
+double RRTPlanner::footprintCost(double x_i, double y_i, double theta_i)
+{
+	if (!initialized_)
+	{
+		ROS_ERROR("The planner has not been initialized, please call initialize() to use the planner");
+		return -1.0;
+	}
 
-			//check if the footprint is legal
-			double footprint_cost = world_model_->footprintCost(x_i, y_i, theta_i, footprint);
-			return footprint_cost;
-		}
-		
- 	};
+	std::vector<geometry_msgs::Point> footprint = costmap_ros_->getRobotFootprint();
+	//if we have no footprint... do nothing
+	if (footprint.size() < 3)
+		return -1.0;
+
+	//check if the footprint is legal
+	double footprint_cost = world_model_->footprintCost(x_i, y_i, theta_i, footprint);
+	return footprint_cost;
+}
+};

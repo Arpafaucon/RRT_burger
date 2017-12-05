@@ -61,8 +61,9 @@
   <!-- The export tag contains other, unspecified, tags -->
   <export>
 
-  <nav_core plugin="${prefix}/global_planner_plugin.xml" />
+  <nav_core plugin="${prefix}/rrt_plugin.xml" />
     <!-- Other tools can request additional information be placed here -->
+  
 
   </export>
 </package>
