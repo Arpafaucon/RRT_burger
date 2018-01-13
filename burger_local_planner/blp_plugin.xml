@@ -1,0 +1,7 @@
+<library path="lib/libburger_local_planner">
+  <class name="burger_local_planner/BurgerPlannerROS" type="burger_local_planner::BurgerPlannerROS" base_class_type="nav_core::BaseLocalPlanner">
+    <description>
+      A implementation of a local planner using either a (custom for burger) approach based on configuration parameters.
+    </description>
+  </class>
+</library>
