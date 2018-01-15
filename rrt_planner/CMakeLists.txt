@@ -12,6 +12,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   base_local_planner
   angles
+  tf
+  nav_core
+  costmap_2d
 )
 
 ## System dependencies are found with CMake's conventions
@@ -104,10 +107,14 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES burger_planner
-#  CATKIN_DEPENDS other_catkin_pkg
-#  DEPENDS system_lib
+  INCLUDE_DIRS include
+  LIBRARIES carrot_planner
+  CATKIN_DEPENDS
+      roscpp
+      pluginlib
+      costmap_2d
+      base_local_planner
+      nav_core
 )
 
 ###########
@@ -121,11 +128,15 @@ include
  ${catkin_INCLUDE_DIRS}
 )
 
-## Declare a C++ library
- add_library(${PROJECT_NAME}
-   src/rrt.cpp
- )
+add_definitions(${EIGEN3_DEFINITIONS})
 
+
+
+## Declare a C++ library
+ add_library(${PROJECT_NAME} src/rrt.cpp)
+ add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES}
+)
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -157,6 +168,23 @@ include
 
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
+
+install(TARGETS ${PROJECT_NAME}
+ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
+install(DIRECTORY include/${PROJECT_NAME}/
+DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+PATTERN ".svn" EXCLUDE
+)
+
+install(FILES rrt_plugin.xml
+DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+
+
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination

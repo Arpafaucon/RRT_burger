@@ -1,5 +1,5 @@
 #include <pluginlib/class_list_macros.h>
-#include "rrt.h"
+#include "rrt_planner/rrt.h"
 
 //register this planner as a BaseGlobalPlanner plugin
 PLUGINLIB_EXPORT_CLASS(rrt_planner::RRTPlanner, nav_core::BaseGlobalPlanner)
@@ -44,32 +44,41 @@ void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS *costmap_
 bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometry_msgs::PoseStamped &goal,
 						  std::vector<geometry_msgs::PoseStamped> &plan)
 {
+	ROS_INFO("BurgerRRT is making a plan");
 	plan.push_back(start);
 	Pose startPose = myPoseStampedMsgToTF(start);
 	Pose goalPose = myPoseStampedMsgToTF(goal);
 
 	Transform difference = startPose.inverseTimes(goalPose);
 
+	float diffX = goal.pose.position.x - start.pose.position.x;
+	float diffY = goal.pose.position.y - start.pose.position.y;
+
 	tf::Quaternion quat = difference.getRotation();
 
-	for (int i = 0; i < 20; i++)
+	int numberOfPoint = 5;
+
+	for (int i = 0; i < numberOfPoint; i++)
 	{
+		//ROS_INFO("Whoholo");
 		geometry_msgs::PoseStamped inter_goal = goal;
 
 		inter_goal.pose.orientation = tf::createQuaternionMsgFromYaw(quat.getY());
 
-		inter_goal.pose.position.x = start.pose.position.x + (0.05 * i) * difference.getOrigin().getX();
-		inter_goal.pose.position.y = start.pose.position.y + (0.05 * i) * difference.getOrigin().getY();
+		inter_goal.pose.position.x = start.pose.position.x + (i * (float)(1.0 / numberOfPoint)) * diffX;
+		inter_goal.pose.position.y = start.pose.position.y + (i * (float)(1.0 / numberOfPoint)) * diffY;
 
 		plan.push_back(inter_goal);
 	}
 	plan.push_back(goal);
+	ROS_INFO("Plan finished");
 	return true;
 }
 
 //we need to take the footprint of the robot into account when we calculate cost to obstacles
 double RRTPlanner::footprintCost(double x_i, double y_i, double theta_i)
 {
+	ROS_INFO("Footprint called");
 	if (!initialized_)
 	{
 		ROS_ERROR("The planner has not been initialized, please call initialize() to use the planner");
