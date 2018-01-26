@@ -341,6 +341,9 @@ base_local_planner::Trajectory BurgerPlanner::findBestPath(
     // If the point is within a radius around the robot, it can be considered for the goal, if it is the closest to the real goal.
     if (distance_to_robot <= SQUARED_RADIUS)
     {
+      goal = it_point;
+      first_point = false;
+      /* ANOTHER STRATEGY
       Eigen::Vector3f diff_to_goal = true_goal - it_point;
       float distance_to_goal = diff_to_goal(0) * diff_to_goal(0) + diff_to_goal(1) * diff_to_goal(1);
 
@@ -354,6 +357,7 @@ base_local_planner::Trajectory BurgerPlanner::findBestPath(
         }
         first_point = false;
       }
+      */
     }
   }
   if (first_point)
