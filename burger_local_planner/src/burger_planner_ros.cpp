@@ -91,7 +91,7 @@ void BurgerPlannerROS::reconfigureCB(BurgerPlannerConfig &config, uint32_t level
 }
 
 BurgerPlannerROS::BurgerPlannerROS() : initialized_(false),
-                                 odom_helper_("odom"), setup_(false)
+                                       odom_helper_("odom"), setup_(false)
 {
 }
 

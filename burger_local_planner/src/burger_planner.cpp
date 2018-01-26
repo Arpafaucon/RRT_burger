@@ -320,8 +320,44 @@ base_local_planner::Trajectory BurgerPlanner::findBestPath(
 
   Eigen::Vector3f pos(global_pose.getOrigin().getX(), global_pose.getOrigin().getY(), tf::getYaw(global_pose.getRotation()));
   Eigen::Vector3f vel(global_vel.getOrigin().getX(), global_vel.getOrigin().getY(), tf::getYaw(global_vel.getRotation()));
-  geometry_msgs::PoseStamped goal_pose = global_plan_.back();
-  Eigen::Vector3f goal(goal_pose.pose.position.x, goal_pose.pose.position.y, tf::getYaw(goal_pose.pose.orientation));
+
+  // Change goal decision making. Previously, the algorithm only considered the last goal.
+  // Let's try to consider the point, that while close enough to the robot, is also the closest possible to the goal.
+
+  geometry_msgs::PoseStamped true_goal_pose = global_plan_.back();
+
+  Eigen::Vector3f true_goal(true_goal_pose.pose.position.x, true_goal_pose.pose.position.y, tf::getYaw(true_goal_pose.pose.orientation));
+  Eigen::Vector3f goal = true_goal;
+
+  float current_distance_to_goal_from_intermediary;
+  bool first_point = true;
+
+  for (std::vector<geometry_msgs::PoseStamped>::iterator it = global_plan_.begin(); it != global_plan_.end(); it++)
+  {
+    Eigen::Vector3f it_point(it->pose.position.x, it->pose.position.y, tf::getYaw(it->pose.orientation));
+    Eigen::Vector3f diff_to_robot = it_point - pos;
+    float distance_to_robot = diff_to_robot(0) * diff_to_robot(0) + diff_to_robot(1) * diff_to_robot(1);
+
+    // If the point is within a radius around the robot, it can be considered for the goal, if it is the closest to the real goal.
+    if (distance_to_robot <= SQUARED_RADIUS)
+    {
+      Eigen::Vector3f diff_to_goal = true_goal - pos;
+      float distance_to_goal = diff_to_goal(0) * diff_to_goal(0) + diff_to_goal(1) * diff_to_goal(1);
+
+      if (distance_to_goal < current_distance_to_goal_from_intermediary || first_point)
+      {
+        current_distance_to_goal_from_intermediary = distance_to_goal;
+        goal = it_point;
+        first_point = false;
+      }
+    }
+  }
+  if (first_point)
+  {
+    // This means that no point from the global_plan_ was close enough to the robot. We might want to ask for a new global plan...
+    ROS_WARN("Local planner didn't find in the global_plan_ any point close enough to the robot. Reaching for the goal.");
+  }
+
   base_local_planner::LocalPlannerLimits limits = planner_util_->getCurrentLimits();
 
   // prepare cost functions and generators for this run
