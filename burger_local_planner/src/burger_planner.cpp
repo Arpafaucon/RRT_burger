@@ -341,13 +341,17 @@ base_local_planner::Trajectory BurgerPlanner::findBestPath(
     // If the point is within a radius around the robot, it can be considered for the goal, if it is the closest to the real goal.
     if (distance_to_robot <= SQUARED_RADIUS)
     {
-      Eigen::Vector3f diff_to_goal = true_goal - pos;
+      Eigen::Vector3f diff_to_goal = true_goal - it_point;
       float distance_to_goal = diff_to_goal(0) * diff_to_goal(0) + diff_to_goal(1) * diff_to_goal(1);
 
       if (distance_to_goal < current_distance_to_goal_from_intermediary || first_point)
       {
         current_distance_to_goal_from_intermediary = distance_to_goal;
         goal = it_point;
+        if (current_distance_to_goal_from_intermediary < 10e-5)
+        {
+          ROS_INFO("Goal in sight!!");
+        }
         first_point = false;
       }
     }
@@ -425,7 +429,7 @@ base_local_planner::Trajectory BurgerPlanner::findBestPath(
     matrix.setRotation(tf::createQuaternionFromYaw(result_traj_.thetav_));
     drive_velocities.setBasis(matrix);
   }
-  ROS_INFO("new trajectory created");
+  //ROS_INFO("new trajectory created");
   return result_traj_;
 }
 };
