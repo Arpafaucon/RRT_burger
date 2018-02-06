@@ -126,6 +126,8 @@ BurgerPlanner::BurgerPlanner(std::string name, base_local_planner::LocalPlannerU
 {
   ros::NodeHandle private_nh("~/" + name);
 
+  burger_trajectory_finder_.initialize();
+
   goal_front_costs_.setStopOnFailure(false);
   alignment_costs_.setStopOnFailure(false);
 
@@ -369,16 +371,18 @@ base_local_planner::Trajectory BurgerPlanner::findBestPath(
   base_local_planner::LocalPlannerLimits limits = planner_util_->getCurrentLimits();
 
   // prepare cost functions and generators for this run
-  generator_.initialise(pos,
-                        vel,
-                        goal,
-                        &limits,
-                        vsamples_);
+  // generator_.initialise(pos,
+  //                       vel,
+  //                       goal,
+  //                       &limits,
+  //                       vsamples_);
 
-  result_traj_.cost_ = -7;
-  // find best trajectory by sampling and scoring the samples
-  std::vector<base_local_planner::Trajectory> all_explored;
-  scored_sampling_planner_.findBestTrajectory(result_traj_, &all_explored);
+  // result_traj_.cost_ = -7;
+  // // find best trajectory by sampling and scoring the samples
+  // std::vector<base_local_planner::Trajectory> all_explored;
+  // scored_sampling_planner_.findBestTrajectory(result_traj_, &all_explored);
+
+  result_traj_ = burger_trajectory_finder_.findBestPath(goal, pose, 0.33);
 
   if (publish_traj_pc_)
   {

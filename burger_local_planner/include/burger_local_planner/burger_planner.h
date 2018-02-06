@@ -187,6 +187,8 @@ class BurgerPlanner
     base_local_planner::TwirlingCostFunction twirling_costs_;
 
     base_local_planner::SimpleScoredSamplingPlanner scored_sampling_planner_;
+
+    burger_local_planner::BurgerTrajectoryFinder burger_trajectory_finder_;
 };
 };
 #endif
