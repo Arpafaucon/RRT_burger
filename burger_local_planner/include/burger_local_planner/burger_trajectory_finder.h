@@ -44,6 +44,8 @@ const float Kd = 0.0;
 class BurgerTrajectoryFinder
 {
 public:
+  BurgerTrajectoryFinder();
+
   base_local_planner::Trajectory findBestPath(Eigen::Vector3f goal, Eigen::Vector3f pose, float deltaTime);
   Eigen::Vector3f computeNewPositions(const Eigen::Vector3f &pos, const Eigen::Vector3f &vel, double dt);
   void initialize();
@@ -56,7 +58,7 @@ private:
   float speedRight_, speedLeft_;
 
   float omegai_[3], omegap_[3], omegad_[3];
-}
+};
 }
 
 #endif

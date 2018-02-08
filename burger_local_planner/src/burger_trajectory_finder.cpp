@@ -98,7 +98,7 @@ base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vecto
     }
 
     traj.xv_ = linearSpeed_[1];
-    traj.xy_ = 0.0;
+    traj.yv_ = 0.0;
     traj.thetav_ = omega_[2];
     traj.cost_ = 1;
 
@@ -140,4 +140,4 @@ Eigen::Vector3f BurgerTrajectoryFinder::computeNewPositions(const Eigen::Vector3
     new_pos[2] = pos[2] + vel[2] * dt;
     return new_pos;
 }
-{
+}

@@ -41,7 +41,7 @@ catkin_package(
         roscpp
 )
 
-add_library(burger_local_planner src/burger_planner.cpp src/burger_planner_ros.cpp)
+add_library(burger_local_planner src/burger_planner.cpp src/burger_planner_ros.cpp src/burger_trajectory_finder.cpp)
 add_dependencies(burger_local_planner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(burger_local_planner ${catkin_LIBRARIES})
 

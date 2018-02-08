@@ -41,6 +41,7 @@
 #include <Eigen/Core>
 
 #include <burger_local_planner/BurgerPlannerConfig.h>
+#include <burger_local_planner/burger_trajectory_finder.h>
 
 //for creating a local cost grid
 #include <base_local_planner/map_grid_visualizer.h>
