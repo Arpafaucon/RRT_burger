@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(rrt_planner)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -124,16 +124,18 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-include
+ include
+ include/${PROJECT_NAME}
  ${catkin_INCLUDE_DIRS}
 )
 
 add_definitions(${EIGEN3_DEFINITIONS})
 
 
-
+# Old line
+# add_library(${PROJECT_NAME} src/rrt.cpp)
 ## Declare a C++ library
- add_library(${PROJECT_NAME} src/rrt.cpp)
+ add_library(${PROJECT_NAME} src/rrts_ros.cpp)
  add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
  target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES}
 )
@@ -145,13 +147,14 @@ add_definitions(${EIGEN3_DEFINITIONS})
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/burger_planner_node.cpp)
+# add_executable(${PROJECT_NAME}_standalone src/rrts_standalone.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
 # set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
+
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -162,6 +165,12 @@ add_definitions(${EIGEN3_DEFINITIONS})
 #   ${catkin_LIBRARIES}
 # )
 
+add_executable(${PROJECT_NAME}_standalone src/rrts_standalone.cpp src/kdtree.c src/system_single_integrator.cpp)
+set_target_properties(${PROJECT_NAME}_standalone PROPERTIES OUTPUT_NAME rrts_standalone PREFIX "")
+add_dependencies(${PROJECT_NAME}_standalone ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_standalone
+  ${catkin_LIBRARIES}
+)
 #############
 ## Install ##
 #############

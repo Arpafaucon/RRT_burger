@@ -17,7 +17,10 @@
                 "/opt/ros/kinetic/include",
                 "/home/lix/catkin_ws/src/turtlebot3_simulations/turtlebot3_fake/include",
                 "/home/lix/catkin_ws/src/turtlebot3_simulations/turtlebot3_gazebo/include",
-                "/usr/include"
+                "/usr/include",
+                "/usr/include/boost/tr1/tr1",
+                "${workspaceRoot}/include",
+                "${workspaceRoot}/include/rrt_planner"
             ],
             "name": "Linux",
             "intelliSenseMode": "clang-x64"
