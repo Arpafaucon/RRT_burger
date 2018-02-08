@@ -12,13 +12,7 @@ namespace rrts_burger
 {
 RRTPlanner::RRTPlanner()
 {
-	ROS_WARN("Void initialization is not advised !");
 	//initialize("Whohohohohoh", costmap_2d::Costmap2DROS:: ;
-}
-
-RRTPlanner::RRTPlanner(std::string name, costmap_2d::Costmap2DROS *costmap_ros)
-{
-	initialize(name, costmap_ros);
 }
 
 void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS *costmap_ros)
@@ -26,14 +20,8 @@ void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS *costmap_
 	if (!initialized_)
 	{
 		ROS_INFO("Begin RRT Initialization");
-		costmap_ros_ = costmap_ros;			   //initialize the costmap_ros_ attribute to the parameter.
-		costmap_ = costmap_ros_->getCostmap(); //get the costmap_ from costmap_ros_
-
-		// initialize other planner parameters
-		ros::NodeHandle private_nh("~/" + name);
-		private_nh.param("step_size", step_size_, costmap_->getResolution());
-		private_nh.param("min_dist_from_robot", min_dist_from_robot_, 0.10);
-		world_model_ = new base_local_planner::CostmapModel(*costmap_);
+		costmap_ = costmap_ros->getCostmap(); //get the costmap_ from costmap_ros_
+		frame_id_ = costmap_ros->getGlobalFrameID();
 
 		initialized_ = true;
 		ROS_INFO("End RRT Initialization");
@@ -45,70 +33,169 @@ void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS *costmap_
 bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometry_msgs::PoseStamped &goal,
 						  std::vector<geometry_msgs::PoseStamped> &plan)
 {
+	static const int goalSize = 2; // in cells
+	double wx, wy;
+	Burger2D::System burgerSystem(costmap_);
+	planner_t rrts = planner_t();
 	ROS_INFO("BurgerRRT is making a plan");
-	plan.push_back(start);
-	Pose startPose = myPoseStampedMsgToTF(start);
-	Pose goalPose = myPoseStampedMsgToTF(goal);
 
-	Transform difference = startPose.inverseTimes(goalPose);
 
-	float diffX = goal.pose.position.x - start.pose.position.x;
-	float diffY = goal.pose.position.y - start.pose.position.y;
+	wx = start.pose.position.x;
+	wy = start.pose.position.y;
 
-	tf::Quaternion quat = difference.getRotation();
+	unsigned int start_x_i, start_y_i, goal_x_i, goal_y_i;
+	double start_x, start_y, goal_x, goal_y;
 
-	int numberOfPoint = 5;
-
-	for (int i = 0; i < numberOfPoint; i++)
+	if (!costmap_->worldToMap(wx, wy, start_x_i, start_y_i))
 	{
-		//ROS_INFO("Whoholo");
-		geometry_msgs::PoseStamped inter_goal = goal;
-
-		inter_goal.pose.orientation = tf::createQuaternionMsgFromYaw(quat.getY());
-
-		inter_goal.pose.position.x = start.pose.position.x + (i * (float)(1.0 / (float)numberOfPoint)) * diffX;
-		//inter_goal.pose.position.y = start.pose.position.y + (i * (float)(1.0 / numberOfPoint)) * diffY;
-		inter_goal.pose.position.y = start.pose.position.y;
-		plan.push_back(inter_goal);
+		ROS_WARN(
+			"The robot's start position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized?");
+		return false;
 	}
+	burgerSystem.worldToMap(wx, wy, start_x, start_y);
+	Burger2D::State2 &rootState = rrts.getRootVertex().getState();
+	rootState[0] = start_x;
+	rootState[1] = start_y;
 
-	geometry_msgs::PoseStamped Xgoal = plan.back();
+	wx = goal.pose.position.x;
+	wy = goal.pose.position.y;
 
-	for (int i = 0; i < numberOfPoint; i++)
+	if (!costmap_->worldToMap(wx, wy, goal_x_i, goal_y_i))
 	{
-		//ROS_INFO("Whoholo");
-		geometry_msgs::PoseStamped inter_goal = goal;
-
-		inter_goal.pose.orientation = tf::createQuaternionMsgFromYaw(quat.getY());
-
-		//inter_goal.pose.position.x = start.pose.position.x + (i * (float)(1.0 / numberOfPoint)) * diffX;
-		inter_goal.pose.position.y = start.pose.position.y + (i * (float)(1.0 / (float)numberOfPoint)) * diffY;
-		inter_goal.pose.position.x = Xgoal.pose.position.x;
-		plan.push_back(inter_goal);
+		ROS_WARN(
+			"The robot's goal position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized?");
+		return false;
 	}
+	burgerSystem.worldToMap(wx, wy, goal_x, goal_y);
+	Burger2D::region2 goalRegion;
+	goalRegion.center[0] = goal_x;
+	goalRegion.center[1] = goal_y;
+	goalRegion.size[0] = goalSize;
+	goalRegion.size[1] = goalSize;
+	burgerSystem.regionGoal = goalRegion;
 
-	plan.push_back(goal);
+    //clear the starting cell within the costmap because we know it can't be an obstacle
+    tf::Stamped<tf::Pose> start_pose;
+    tf::poseStampedMsgToTF(start, start_pose);
+	clearRobotCell(start_x_i, start_y_i);
+
+	rrts.setSystem(burgerSystem);
+
+	ROS_INFO("RRTS Star initialized");
+
+	 // Initialize the planner
+    rrts.initialize();
+
+    // This parameter should be larger than 1.5 for asymptotic
+    //   optimality. Larger values will weigh on optimization
+    //   rather than exploration in the RRT* algorithm. Lower
+    //   values, such as 0.1, should recover the RRT.
+    rrts.setGamma(1.5);
+
+	clock_t startTime = clock();
+
+    // Run the algorithm for 10000 iteartions
+    for (int i = 0; i < 2000; i++)
+        rrts.iteration();
+
+    clock_t finishTime = clock();
+
+	list<double *> stateList;
+    rrts.getBestTrajectory(stateList);
+
+	ROS_INFO("RRT Start finished running");
+
+	ros::Time plan_time = ros::Time::now();
+
+	int stateIndex = 0;
+    for (list<double *>::iterator iter = stateList.begin(); iter != stateList.end(); iter++)
+    {
+        double *stateRef = *iter;
+		double world_x, world_y;
+		burgerSystem.mapToWorld(stateRef[0], stateRef[1], world_x, world_y);
+		geometry_msgs::PoseStamped pose;
+        pose.header.stamp = plan_time;
+        pose.header.frame_id = frame_id_;
+        pose.pose.position.x = world_x;
+        pose.pose.position.y = world_y;
+        pose.pose.position.z = 0.0;
+        pose.pose.orientation.x = 0.0;
+        pose.pose.orientation.y = 0.0;
+        pose.pose.orientation.z = 0.0;
+        pose.pose.orientation.w = 1.0;
+		plan.push_back(pose);
+        // bool coll = system.IsInCollision(stateRef);
+
+        //small verif to be sure
+        // cout << "reaching" << system. << endl;
+
+        // resultFile << "W " << stateRef[0] << " " << stateRef[1] << " " << (coll ? "!" : "") << endl;
+
+        // delete[] stateRef;
+        // stateIndex++;
+    }
+
+	ROS_INFO("RRT Star finished filling plan (%lu entries)", plan.size());
+
+
+    // cout << "Time : " << (static_cast<double>(finishTime - startTime)) / CLOCKS_PER_SEC << endl;
+
+
+	// plan.push_back(start);
+	// Pose startPose = myPoseStampedMsgToTF(start);
+	// Pose goalPose = myPoseStampedMsgToTF(goal);
+
+	// Transform difference = startPose.inverseTimes(goalPose);
+
+	// float diffX = goal.pose.position.x - start.pose.position.x;
+	// float diffY = goal.pose.position.y - start.pose.position.y;
+
+	// tf::Quaternion quat = difference.getRotation();
+
+	// int numberOfPoint = 5;
+
+	// for (int i = 0; i < numberOfPoint; i++)
+	// {
+	// 	//ROS_INFO("Whoholo");
+	// 	geometry_msgs::PoseStamped inter_goal = goal;
+
+	// 	inter_goal.pose.orientation = tf::createQuaternionMsgFromYaw(quat.getY());
+
+	// 	inter_goal.pose.position.x = start.pose.position.x + (i * (float)(1.0 / (float)numberOfPoint)) * diffX;
+	// 	//inter_goal.pose.position.y = start.pose.position.y + (i * (float)(1.0 / numberOfPoint)) * diffY;
+	// 	inter_goal.pose.position.y = start.pose.position.y;
+	// 	plan.push_back(inter_goal);
+	// }
+
+	// geometry_msgs::PoseStamped Xgoal = plan.back();
+
+	// for (int i = 0; i < numberOfPoint; i++)
+	// {
+	// 	//ROS_INFO("Whoholo");
+	// 	geometry_msgs::PoseStamped inter_goal = goal;
+
+	// 	inter_goal.pose.orientation = tf::createQuaternionMsgFromYaw(quat.getY());
+
+	// 	//inter_goal.pose.position.x = start.pose.position.x + (i * (float)(1.0 / numberOfPoint)) * diffX;
+	// 	inter_goal.pose.position.y = start.pose.position.y + (i * (float)(1.0 / (float)numberOfPoint)) * diffY;
+	// 	inter_goal.pose.position.x = Xgoal.pose.position.x;
+	// 	plan.push_back(inter_goal);
+	// }
+
+	// plan.push_back(goal);
 	ROS_INFO("Plan finished");
 	return true;
 }
 
-//we need to take the footprint of the robot into account when we calculate cost to obstacles
-double RRTPlanner::footprintCost(double x_i, double y_i, double theta_i)
-{
-	ROS_INFO("Footprint called");
-	if (!initialized_)
-	{
-		ROS_ERROR("The planner has not been initialized, please call initialize() to use the planner");
-		return -1.0;
-	}
+void RRTPlanner::clearRobotCell(unsigned int mx, unsigned int my) {
+    if (!initialized_) {
+        ROS_ERROR(
+                "This planner has not been initialized yet, but it is being used, please call initialize() before use");
+        return;
+    }
 
-	std::vector<geometry_msgs::Point> footprint = costmap_ros_->getRobotFootprint();
-	//if we have no footprint... do nothing
-	if (footprint.size() < 3)
-		return -1.0;
-
-	//check if the footprint is legal
-	double footprint_cost = world_model_->footprintCost(x_i, y_i, theta_i, footprint);
-	return footprint_cost;
+    //set the associated costs in the cost map to be free
+    costmap_->setCost(mx, my, costmap_2d::FREE_SPACE);
 }
+
 };

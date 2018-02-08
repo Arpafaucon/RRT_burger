@@ -13,7 +13,7 @@ region2::region2()
 {
 }
 
-region2::region2(int xleft, int xright, int ybottom, int yup)
+region2::rregion2(double xleft, double xright, double ybottom, double yup)
 {
 	center[0] = 0.5 * (xleft + xright);
 	center[1] = 0.5 * (ybottom + yup);
@@ -141,9 +141,9 @@ double Trajectory::evaluateCost()
 	return totalVariation;
 }
 
-System::System()
+  System(costmap_2d::Costmap2D *costmap)
 {
-
+	costmap_ = costmap;
 	// numDimensions = 0;
 }
 
@@ -316,4 +316,28 @@ double System::evaluateCostToGo(State2 &stateIn)
 	dist = sqrt(dist);
 
 	return dist - radius;
+}
+
+void System::mapToWorld(double mx, double my, double& wx, double& wy) {
+    wx = costmap_->getOriginX() + (mx+convert_offset_) * costmap_->getResolution();
+    wy = costmap_->getOriginY() + (my+convert_offset_) * costmap_->getResolution();
+}
+
+bool System::worldToMap(double wx, double wy, double& mx, double& my) {
+    double origin_x = costmap_->getOriginX(), origin_y = costmap_->getOriginY();
+    double resolution = costmap_->getResolution();
+
+    if (wx < origin_x || wy < origin_y)
+        return false;
+
+    mx = (wx - origin_x) / resolution - convert_offset_;
+    my = (wy - origin_y) / resolution - convert_offset_;
+
+    if (mx < costmap_->getSizeInCellsX() && my < costmap_->getSizeInCellsY())
+        return true;
+
+    return false;
+}
+
+
 }

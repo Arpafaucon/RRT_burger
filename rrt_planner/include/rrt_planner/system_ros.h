@@ -42,8 +42,7 @@ public:
          */
   region2();
 
-  region2(int xleft, int xright, int ybottom, int yup);
-
+  region2(double xleft, double xright, double ybottom, double yup);
 
   /*!
          * \brief region destructor
@@ -60,7 +59,7 @@ public:
          * \param numDimensionsIn New number of dimensions.
          *
          */
-//   int setNumDimensions(int numDimensionsIn);
+  //   int setNumDimensions(int numDimensionsIn);
 };
 
 /*!
@@ -71,7 +70,7 @@ public:
 class State2
 {
   static const int numDimensions = 2;
-  int x[numDimensions] = {0};
+  double x[numDimensions] = {0};
 
 public:
   /*!
@@ -107,7 +106,7 @@ public:
          *
          * More elaborate description
          */
-  int &operator[](const int i) { return x[i]; }
+  double &operator[](const int i) { return x[i]; }
 
   friend class System;
   friend class Trajectory;
@@ -193,18 +192,20 @@ public:
 class System
 {
 
-  static const int numDimensions = 2;
-
-  State2 rootState;
-
-public:
-  bool IsInCollision(int *stateIn);
+  static const int numDimensions_ = 2;
+  // costmap2d::Costmap2DROS* costmap_ros_;
+  costmap_2d::Costmap2D *costmap_;
+  State2 rootState_;
+  bool initalized_;
   /*!
          * \brief The operating region
          *
          * More elaborate description
          */
-  region2 regionOperating;
+  region2 regionOperating_;
+
+public:
+  bool IsInCollision(int *stateIn);
 
   /*!
          * \brief The goal region
@@ -218,14 +219,14 @@ public:
          *
          * More elaborate description
          */
-  std::list<region2 *> obstacles;
+  // std::list<region2 *> obstacles;
 
   /*!
          * \brief System constructor
          *
          * More elaborate description
          */
-  System();
+  System(costmap_2d::Costmap2D *costmap);
 
   /*!
          * \brief System destructor
@@ -234,21 +235,26 @@ public:
          */
   ~System();
 
-//   int setNumDimensions(int numDimensionsIn);
+  //   int setNumDimensions(int numDimensionsIn);
 
   /*!
          * \brief Returns the dimensionality of the Euclidean space.
          *
          * A more elaborate description.
          */
-  int getNumDimensions() { return numDimensions; }
+  int getNumDimensions() { return numDimensions_; }
+
+
+  void mapToWorld(double mx, double my, double& wx, double& wy);
+  bool worldToMap(double wx, double wy, double& mx, double& my);
+  
 
   /*!
          * \brief Returns a reference to the root state.
-         *
+         *t
          * A more elaborate description.
          */
-  State2 &getRootState() { return rootState; }
+  State2 &getRootState() { return rootState_; }
 
   /*!
          * \brief Returns the statekey for the given state.
@@ -328,7 +334,9 @@ public:
          * \param trajectoryOut The list of double arrays that represent the trajectory
          *
          */
-  int getTrajectory(State2 &stateFromIn, State2 &stateToIn, std::list<double*> &trajectoryOut);
+  int getTrajectory(State2 &stateFromIn, State2 &stateToIn, std::list<double *> &trajectoryOut);
+
+
 };
 }
 
