@@ -73,38 +73,59 @@ base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vecto
         linearSpeed_[1] = SPEED_MIN;
     }
 
-    float thetaDiffNow = atan((yGoal_ - yPos_[1]) / (xGoal_ - xPos_[1]));
+    float thetaToGoalNow = atan((yGoal_ - yPos_[1]) / (xGoal_ - xPos_[1]));
     if ((xGoal_ - xPos_[1]) < 0)
     {
         if ((yGoal_ - yPos_[1]) > 0)
         {
-            thetaDiffNow += PI;
+            thetaToGoalNow += PI;
         }
         else
         {
-            thetaDiffNow -= PI;
+            thetaToGoalNow -= PI;
         }
     }
 
-    float thetaDiffPrev = atan((yGoal_ - yPos_[0]) / (xGoal_ - xPos_[0]));
+    float thetaToGoalPrev = atan((yGoal_ - yPos_[0]) / (xGoal_ - xPos_[0]));
     if ((xGoal_ - xPos_[0]) < 0)
     {
         if ((yGoal_ - yPos_[0]) > 0)
         {
-            thetaDiffPrev += PI;
+            thetaToGoalPrev += PI;
         }
         else
         {
-            thetaDiffPrev -= PI;
+            thetaToGoalPrev -= PI;
         }
     }
+
+    float thetaDiffNow = (thetaToGoalNow - thetaPos_[1]);
+    if (thetaDiffNow > PI)
+    {
+        thetaDiffNow -= 2 * PI;
+    }
+    if (thetaDiffNow < -PI)
+    {
+        thetaDiffNow += 2 * PI;
+    }
+
+    float thetaDiffPrev = (thetaToGoalPrev - thetaPos_[0]);
+    if (thetaDiffPrev > PI)
+    {
+        thetaDiffPrev -= 2 * PI;
+    }
+    if (thetaDiffPrev < -PI)
+    {
+        thetaDiffPrev += 2 * PI;
+    }
+
     ROS_INFO("pose = (%f, %f, %f), goal =(%f, %f)", xPos_[1], yPos_[1], thetaPos_[1], xGoal_, yGoal_);
 
-    ROS_INFO("thetadiffnow = %f, thetaNow = %f", thetaDiffNow, thetaPos_[1]);
+    ROS_INFO("thetaToGoalNow = %f, thetaNow = %f", thetaToGoalNow, thetaPos_[1]);
 
-    omegap_[2] = Kp * (thetaDiffNow - thetaPos_[1]);
-    omegai_[2] = omegai_[0] + Ki * (deltaTime / 2.0) * (thetaDiffNow - thetaPos_[1] + thetaDiffPrev - thetaPos_[0]);
-    omegad_[2] = -omegad_[0] + Kd * (2.0 / deltaTime) * ((thetaDiffNow - thetaPos_[1]) - (thetaDiffPrev - thetaPos_[0]));
+    omegap_[2] = Kp * thetaDiffNow;
+    omegai_[2] = omegai_[0] + Ki * (deltaTime / 2.0) * (thetaDiffNow + thetaDiffPrev);
+    omegad_[2] = -omegad_[0] + Kd * (2.0 / deltaTime) * (thetaDiffNow - thetaDiffPrev);
     omega_[2] = omegad_[2] + omegai_[2] + omegap_[2];
 
     if (omega_[2] > OMEGA_MAX)

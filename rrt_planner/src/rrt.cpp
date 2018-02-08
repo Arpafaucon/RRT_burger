@@ -65,11 +65,27 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 
 		inter_goal.pose.orientation = tf::createQuaternionMsgFromYaw(quat.getY());
 
-		inter_goal.pose.position.x = start.pose.position.x + (i * (float)(1.0 / numberOfPoint)) * diffX;
-		inter_goal.pose.position.y = start.pose.position.y + (i * (float)(1.0 / numberOfPoint)) * diffY;
-
+		inter_goal.pose.position.x = start.pose.position.x + (i * (float)(1.0 / (float)numberOfPoint)) * diffX;
+		//inter_goal.pose.position.y = start.pose.position.y + (i * (float)(1.0 / numberOfPoint)) * diffY;
+		inter_goal.pose.position.y = start.pose.position.y;
 		plan.push_back(inter_goal);
 	}
+
+	geometry_msgs::PoseStamped Xgoal = plan.back();
+
+	for (int i = 0; i < numberOfPoint; i++)
+	{
+		//ROS_INFO("Whoholo");
+		geometry_msgs::PoseStamped inter_goal = goal;
+
+		inter_goal.pose.orientation = tf::createQuaternionMsgFromYaw(quat.getY());
+
+		//inter_goal.pose.position.x = start.pose.position.x + (i * (float)(1.0 / numberOfPoint)) * diffX;
+		inter_goal.pose.position.y = start.pose.position.y + (i * (float)(1.0 / (float)numberOfPoint)) * diffY;
+		inter_goal.pose.position.x = Xgoal.pose.position.x;
+		plan.push_back(inter_goal);
+	}
+
 	plan.push_back(goal);
 	ROS_INFO("Plan finished");
 	return true;
