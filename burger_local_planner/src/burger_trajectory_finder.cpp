@@ -1,5 +1,6 @@
 
 #include <burger_local_planner/burger_trajectory_finder.h>
+#include <math.h>
 
 namespace burger_local_planner
 {
@@ -43,15 +44,20 @@ void BurgerTrajectoryFinder::initialize(Eigen::Vector3f initialPose)
 base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vector3f goal, Eigen::Vector3f pose, float deltaTime)
 {
     base_local_planner::Trajectory traj;
-    xPos_[1] = pose(0);
-    yPos_[1] = pose(1);
-    thetaPos_[1] = pose(2);
+    xPos_[1] = pose[0];
+    yPos_[1] = pose[1];
+    thetaPos_[1] = pose[2];
 
-    xGoal_ = goal(0);
-    yGoal_ = goal(1);
+    if (goal[0] != xGoal_ || goal[1] != yGoal_)
+    {
+        xGoal_ = goal[0];
+        yGoal_ = goal[1];
+        ROS_INFO("trajectory finder got new goal");
+    }
+
     // thetaGoal_ = goal(2);
 
-    linearSpeed_[1] = sqrt(pow((xGoal_ - xPos_[1]) / deltaTime, 2) + pow((yGoal_ - yPos_[1]) / deltaTime, 2));
+    linearSpeed_[1] = SPEED_FACTOR * sqrt(pow((xGoal_ - xPos_[1]) / deltaTime, 2) + pow((yGoal_ - yPos_[1]) / deltaTime, 2));
     if (linearSpeed_[1] - linearSpeed_[0] >= SPEED_DELTA_MAX)
     {
         linearSpeed_[1] = linearSpeed_[0] + SPEED_DELTA_MAX;
@@ -68,7 +74,33 @@ base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vecto
     }
 
     float thetaDiffNow = atan((yGoal_ - yPos_[1]) / (xGoal_ - xPos_[1]));
+    if ((xGoal_ - xPos_[1]) < 0)
+    {
+        if ((yGoal_ - yPos_[1]) > 0)
+        {
+            thetaDiffNow += PI;
+        }
+        else
+        {
+            thetaDiffNow -= PI;
+        }
+    }
+
     float thetaDiffPrev = atan((yGoal_ - yPos_[0]) / (xGoal_ - xPos_[0]));
+    if ((xGoal_ - xPos_[0]) < 0)
+    {
+        if ((yGoal_ - yPos_[0]) > 0)
+        {
+            thetaDiffPrev += PI;
+        }
+        else
+        {
+            thetaDiffPrev -= PI;
+        }
+    }
+    ROS_INFO("pose = (%f, %f, %f), goal =(%f, %f)", xPos_[1], yPos_[1], thetaPos_[1], xGoal_, yGoal_);
+
+    ROS_INFO("thetadiffnow = %f, thetaNow = %f", thetaDiffNow, thetaPos_[1]);
 
     omegap_[2] = Kp * (thetaDiffNow - thetaPos_[1]);
     omegai_[2] = omegai_[0] + Ki * (deltaTime / 2.0) * (thetaDiffNow - thetaPos_[1] + thetaDiffPrev - thetaPos_[0]);
@@ -101,6 +133,8 @@ base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vecto
     traj.yv_ = 0.0;
     traj.thetav_ = omega_[2];
     traj.cost_ = 1;
+
+    ROS_INFO("Trajectory is V = %lf \n     Omega = %lf \n", linearSpeed_[1], omega_[2]);
 
     Eigen::Vector3f velocity;
     velocity[0] = linearSpeed_[1];

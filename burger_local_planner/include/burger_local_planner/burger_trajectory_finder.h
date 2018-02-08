@@ -29,17 +29,18 @@
 namespace burger_local_planner
 {
 
-const float L = 0.15;              ///< distance between middle of wheels
-const float SPEED_DELTA_MAX = 0.1; ///< Max speed variation between two rounds (only when increasing)
-const float SPEED_MAX = 1.0;       ///< Max linear speed
-const float SPEED_MIN = 0.05;      ///< Min linear speed
-const float OMEGA_MAX = 10.0;
+const float L = 0.160;              ///< distance between middle of wheels
+const float SPEED_DELTA_MAX = 0.01; ///< Max speed variation between two rounds (only when increasing)
+const float SPEED_MAX = 0.18;       ///< Max linear speed (m/s)
+const float SPEED_MIN = 0.01;       ///< Min linear speed
+const float OMEGA_MAX = 2.840;      ///< Mas angular velocit (rad/s)
+const float PI = 3.1415926535;
+const float WHEEL_MAX_SPEED = SPEED_MAX * 0.9;
+const float SPEED_FACTOR = 0.1;
 
-const float WHEEL_MAX_SPEED = 50.0;
-
-const float Kp = 2.0;
-const float Ki = 1.0;
-const float Kd = 0.0;
+const float Kp = 10.0;
+const float Ki = 2.0;
+const float Kd = 0.5;
 
 class BurgerTrajectoryFinder
 {
