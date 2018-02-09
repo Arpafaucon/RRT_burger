@@ -42,39 +42,50 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	ROS_INFO("BurgerRRT is making a plan");
 
 
-    char hostname[256];
-    gethostname(hostname, sizeof(hostname));
-    ROS_INFO("PID %d on %s ready for attach\n", getpid(), hostname);
-    fflush(stdout);
-    while (0 == i)
-        sleep(5);
+    // char hostname[256];
+    // gethostname(hostname, sizeof(hostname));
+    // ROS_INFO("PID %d on %s ready for attach\n", getpid(), hostname);
+    // fflush(stdout);
+    // while (0 == i)
+    //     sleep(5);
 
 	wx = start.pose.position.x;
 	wy = start.pose.position.y;
 
 	unsigned int start_x_i, start_y_i, goal_x_i, goal_y_i;
 	double start_x, start_y, goal_x, goal_y;
+	ROS_INFO("RRTS Star initialized1");
 
 	if (!costmap_->worldToMap(wx, wy, start_x_i, start_y_i))
 	{
 		ROS_WARN(
 			"The robot's start position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized?");
 		return false;
-	}
+	}	
+	ROS_INFO("RRTS Star initialized2");
+
 	burgerSystem.worldToMap(wx, wy, start_x, start_y);
+
+	ROS_INFO("RRTS Star initialized2b");
+
 	Burger2D::State2 &rootState = rrts.getRootVertex().getState();
+	ROS_INFO("RRTS Star initialized2c");
+
 	rootState[0] = start_x;
 	rootState[1] = start_y;
 
 	wx = goal.pose.position.x;
 	wy = goal.pose.position.y;
+	ROS_INFO("RRTS Star initialized3");
 
 	if (!costmap_->worldToMap(wx, wy, goal_x_i, goal_y_i))
 	{
 		ROS_WARN(
 			"The robot's goal position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized?");
 		return false;
-	}
+	}	
+	ROS_INFO("RRTS Star initialized4");
+
 	burgerSystem.worldToMap(wx, wy, goal_x, goal_y);
 	Burger2D::region2 goalRegion;
 	goalRegion.center[0] = goal_x;
@@ -82,11 +93,13 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	goalRegion.size[0] = goalSize;
 	goalRegion.size[1] = goalSize;
 	burgerSystem.regionGoal_ = goalRegion;
+	ROS_INFO("RRTS Star initialized5");
 
     //clear the starting cell within the costmap because we know it can't be an obstacle
     tf::Stamped<tf::Pose> start_pose;
     tf::poseStampedMsgToTF(start, start_pose);
 	clearRobotCell(start_x_i, start_y_i);
+	ROS_INFO("RRTS Star initialized");
 
 	rrts.setSystem(burgerSystem);
 
