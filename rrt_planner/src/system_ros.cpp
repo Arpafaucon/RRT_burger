@@ -149,7 +149,7 @@ System::System(costmap_2d::Costmap2D *costmap)
 
 System::~System()
 {
-	cout << "System destroyed";
+	// cout << "System destroyed";
 }
 
 // int System::setNumDimensions(int numDimensionsIn)
