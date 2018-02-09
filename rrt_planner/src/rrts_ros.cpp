@@ -56,23 +56,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	double start_x, start_y, goal_x, goal_y;
 	ROS_INFO("RRTS Star initialized1");
 
-	if (!costmap_->worldToMap(wx, wy, start_x_i, start_y_i))
-	{
-		ROS_WARN(
-			"The robot's start position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized?");
-		return false;
-	}	
-	ROS_INFO("RRTS Star initialized2");
 
-	burgerSystem.worldToMap(wx, wy, start_x, start_y);
-
-	ROS_INFO("RRTS Star initialized2b");
-
-	Burger2D::State2 &rootState = rrts.getRootVertex().getState();
-	ROS_INFO("RRTS Star initialized2c");
-
-	rootState[0] = start_x;
-	rootState[1] = start_y;
 
 	wx = goal.pose.position.x;
 	wy = goal.pose.position.y;
@@ -105,9 +89,22 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 
 	ROS_INFO("RRTS Star initialized");
 
+	if (!costmap_->worldToMap(wx, wy, start_x_i, start_y_i))
+	{
+		ROS_WARN(
+			"The robot's start position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized?");
+		return false;
+	}	
+	ROS_INFO("RRTS Star initialized2");
+	burgerSystem.worldToMap(wx, wy, start_x, start_y);
+	ROS_INFO("RRTS Star initialized2b");
+	Burger2D::State2 &rootState = rrts.getRootVertex().getState();
+	ROS_INFO("RRTS Star initialized2c");
+	rootState[0] = start_x;
+	rootState[1] = start_y;
+
 	 // Initialize the planner
     rrts.initialize();
-
     // This parameter should be larger than 1.5 for asymptotic
     //   optimality. Larger values will weigh on optimization
     //   rather than exploration in the RRT* algorithm. Lower
