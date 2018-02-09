@@ -64,6 +64,7 @@
   <export>
 
   <nav_core plugin="${prefix}/rrt_plugin.xml" />
+  <nav_core plugin="${prefix}/carrot_plugin.xml" />
     <!-- Other tools can request additional information be placed here -->
   
 
