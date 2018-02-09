@@ -1,5 +1,5 @@
  <library path="lib/librrt_planner_rrt">
-  <class name="rrts_burger/RRTPlanner" type="rrts_burger/RRTPlanner" base_class_type="nav_core::BaseGlobalPlanner">
+  <class name="rrts_burger/RRTPlanner" type="rrts_burger::RRTPlanner" base_class_type="nav_core::BaseGlobalPlanner">
     <description>This is a RRT planner plugin by greg and momo project.</description>
   </class>
  </library>
