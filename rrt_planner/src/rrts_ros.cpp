@@ -1,4 +1,5 @@
 #include <pluginlib/class_list_macros.h>
+#include <unistd.h>
 #include "rrt_planner/rrts_ros.h"
 
 //register this planner as a BaseGlobalPlanner plugin
@@ -35,10 +36,18 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 {
 	static const int goalSize = 2; // in cells
 	double wx, wy;
+	volatile int i = 0;
 	Burger2D::System burgerSystem(costmap_);
 	planner_t rrts = planner_t();
 	ROS_INFO("BurgerRRT is making a plan");
 
+
+    char hostname[256];
+    gethostname(hostname, sizeof(hostname));
+    ROS_INFO("PID %d on %s ready for attach\n", getpid(), hostname);
+    fflush(stdout);
+    while (0 == i)
+        sleep(5);
 
 	wx = start.pose.position.x;
 	wy = start.pose.position.y;
