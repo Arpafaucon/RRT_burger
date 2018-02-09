@@ -43,7 +43,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## * In this file (CMakeLists.txt):
 ##   * add "message_generation" and every package in MSG_DEP_SET to
 ##     find_package(catkin REQUIRED COMPONENTS ...)
-##   * add "message_runtime" and every package in MSG_DEP_SET to
+##   * add "message_runtime" and every package in MSG_DEP_SET tossh arpad@52.166.111.67
 ##     catkin_package(CATKIN_DEPENDS ...)
 ##   * uncomment the add_*_files sections below as needed
 ##     and list every .msg/.srv/.action file to be processed
@@ -132,12 +132,18 @@ include_directories(
 add_definitions(${EIGEN3_DEFINITIONS})
 
 
-# Old line
-# add_library(${PROJECT_NAME} src/rrt.cpp)
+# Old Library
 ## Declare a C++ library
- add_library(${PROJECT_NAME} src/rrts_ros.cpp)
- add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
- target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES}
+ add_library(${PROJECT_NAME}_carrot src/rrt.cpp)
+ add_dependencies(${PROJECT_NAME}_carrot ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ target_link_libraries(${PROJECT_NAME}_carrot ${catkin_LIBRARIES}
+)
+
+# New one
+## Declare a C++ library
+ add_library(${PROJECT_NAME}_rrt src/rrts_ros.cpp src/system_ros.cpp src/kdtree.c)
+ add_dependencies(${PROJECT_NAME}_rrt ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ target_link_libraries(${PROJECT_NAME}_rrt ${catkin_LIBRARIES}
 )
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -165,12 +171,18 @@ add_definitions(${EIGEN3_DEFINITIONS})
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(${PROJECT_NAME}_standalone src/rrts_standalone.cpp src/kdtree.c src/system_single_integrator.cpp)
-set_target_properties(${PROJECT_NAME}_standalone PROPERTIES OUTPUT_NAME rrts_standalone PREFIX "")
-add_dependencies(${PROJECT_NAME}_standalone ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME}_standalone
-  ${catkin_LIBRARIES}
-)
+
+##########
+# Creates the sandalone executable of the first version (without ROS)
+##########
+# add_executable(${PROJECT_NAME}_standalone src/rrts_standalone.cpp src/kdtree.c src/system_single_integrator.cpp)
+# set_target_properties(${PROJECT_NAME}_standalone PROPERTIES OUTPUT_NAME rrts_standalone PREFIX "")
+# add_dependencies(${PROJECT_NAME}_standalone ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(${PROJECT_NAME}_standalone
+#   ${catkin_LIBRARIES}
+# )
+
+
 #############
 ## Install ##
 #############
@@ -178,7 +190,12 @@ target_link_libraries(${PROJECT_NAME}_standalone
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
 
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME}_carrot
+ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
+install(TARGETS ${PROJECT_NAME}_rrt
 ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )

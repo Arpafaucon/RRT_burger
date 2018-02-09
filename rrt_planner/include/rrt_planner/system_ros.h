@@ -6,6 +6,11 @@
 #define RRTS_SYSTEM_ROS
 
 #include <list>
+#include <costmap_2d/costmap_2d_ros.h>
+#include <costmap_2d/costmap_2d.h>
+
+#define DISCRETIZATION_STEP 0.01
+
 
 namespace Burger2D
 {
@@ -203,16 +208,22 @@ class System
          * More elaborate description
          */
   region2 regionOperating_;
+  /**
+   * used in mapto world and world to map: 
+   * if 0.0 -> world cooridnates are the bottom left corner
+   * if 0.5 -> center of the cell
+   */
+  double convert_offset_ = 0.5;
 
 public:
-  bool IsInCollision(int *stateIn);
+  bool IsInCollision(double *stateIn);
 
   /*!
          * \brief The goal region
          *
          * More elaborate description
          */
-  region2 regionGoal;
+  region2 regionGoal_;
 
   /*!
          * \brief The list of all obstacles

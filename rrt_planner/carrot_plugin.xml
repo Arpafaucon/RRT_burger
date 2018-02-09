@@ -1,0 +1,5 @@
+ <library path="lib/librrt_planner_carrot">
+  <class name="rrt_planner/RRTPlanner" type="rrt_planner::RRTPlanner" base_class_type="nav_core::BaseGlobalPlanner">
+    <description>This is a carrot planner plugin by greg and momo project.</description>
+  </class>
+ </library>

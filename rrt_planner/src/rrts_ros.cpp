@@ -72,7 +72,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	goalRegion.center[1] = goal_y;
 	goalRegion.size[0] = goalSize;
 	goalRegion.size[1] = goalSize;
-	burgerSystem.regionGoal = goalRegion;
+	burgerSystem.regionGoal_ = goalRegion;
 
     //clear the starting cell within the costmap because we know it can't be an obstacle
     tf::Stamped<tf::Pose> start_pose;

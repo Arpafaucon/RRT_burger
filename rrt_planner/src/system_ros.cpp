@@ -13,7 +13,7 @@ region2::region2()
 {
 }
 
-region2::rregion2(double xleft, double xright, double ybottom, double yup)
+region2::region2(double xleft, double xright, double ybottom, double yup)
 {
 	center[0] = 0.5 * (xleft + xright);
 	center[1] = 0.5 * (ybottom + yup);
@@ -141,7 +141,7 @@ double Trajectory::evaluateCost()
 	return totalVariation;
 }
 
-  System(costmap_2d::Costmap2D *costmap)
+System::System(costmap_2d::Costmap2D *costmap)
 {
 	costmap_ = costmap;
 	// numDimensions = 0;
@@ -168,46 +168,44 @@ System::~System()
 int System::getStateKey(State2 &stateIn, double *stateKey)
 {
 
-	for (int i = 0; i < numDimensions; i++)
-		stateKey[i] = stateIn.x[i] / regionOperating.size[i];
-
+	for (int i = 0; i < numDimensions_; i++)
+		stateKey[i] = stateIn.x[i] / regionOperating_.size[i];
 	return 1;
 }
 
 bool System::isReachingTarget(State2 &stateIn)
 {
 
-	for (int i = 0; i < numDimensions; i++)
+	for (int i = 0; i < numDimensions_; i++)
 	{
-
-		if (fabs(stateIn.x[i] - regionGoal.center[i]) > regionGoal.size[i] / 2.0)
+		if (fabs(stateIn.x[i] - regionGoal_.center[i]) > regionGoal_.size[i] / 2.0)
 			return false;
 	}
 
 	return true;
 }
 
-bool System::IsInCollision(int *stateIn)
+bool System::IsInCollision(double *stateIn)
 {
 
-	for (list<region2 *>::iterator iter = obstacles.begin(); iter != obstacles.end(); iter++)
-	{
+	// for (list<region2 *>::iterator iter = obstacles.begin(); iter != obstacles.end(); iter++)
+	// {
 
-		region2 *obstacleCurr = *iter;
-		bool collisionFound = true;
+	// 	region2 *obstacleCurr = *iter;
+	// 	bool collisionFound = true;
 
-		for (int i = 0; i < numDimensions; i++)
-			if (fabs(obstacleCurr->center[i] - stateIn[i]) > obstacleCurr->size[i] / 2.0)
-			{
-				collisionFound = false;
-				break;
-			}
+	// 	for (int i = 0; i < numDimensions; i++)
+	// 		if (fabs(obstacleCurr->center[i] - stateIn[i]) > obstacleCurr->size[i] / 2.0)
+	// 		{
+	// 			collisionFound = false;
+	// 			break;
+	// 		}
 
-		if (collisionFound)
-		{
-			return true;
-		}
-	}
+	// 	if (collisionFound)
+	// 	{
+	// 		return true;
+	// 	}
+	// }
 
 	return false;
 }
@@ -217,10 +215,10 @@ int System::sampleState(State2 &randomStateOut)
 
 	// randomStateOut.setNumDimensions(numDimensions);
 
-	for (int i = 0; i < numDimensions; i++)
+	for (int i = 0; i < numDimensions_; i++)
 	{
 
-		randomStateOut.x[i] = (double)rand() / (RAND_MAX + 1.0) * regionOperating.size[i] - regionOperating.size[i] / 2.0 + regionOperating.center[i];
+		randomStateOut.x[i] = (double)rand() / (RAND_MAX + 1.0) * regionOperating_.size[i] - regionOperating_.size[i] / 2.0 + regionOperating_.center[i];
 	}
 
 	if (IsInCollision(randomStateOut.x))
@@ -232,25 +230,25 @@ int System::sampleState(State2 &randomStateOut)
 int System::extendTo(State2 &stateFromIn, State2 &stateTowardsIn, Trajectory &trajectoryOut, bool &exactConnectionOut)
 {
 
-	double *dists = new double[numDimensions];
-	for (int i = 0; i < numDimensions; i++)
+	double *dists = new double[numDimensions_];
+	for (int i = 0; i < numDimensions_; i++)
 		dists[i] = stateTowardsIn.x[i] - stateFromIn.x[i];
 
 	double distTotal = 0.0;
-	for (int i = 0; i < numDimensions; i++)
+	for (int i = 0; i < numDimensions_; i++)
 		distTotal += dists[i] * dists[i];
 	distTotal = sqrt(distTotal);
 
 	double incrementTotal = distTotal / DISCRETIZATION_STEP;
 
 	// normalize the distance according to the disretization step
-	for (int i = 0; i < numDimensions; i++)
+	for (int i = 0; i < numDimensions_; i++)
 		dists[i] /= incrementTotal;
 
 	int numSegments = (int)floor(incrementTotal);
 
-	int stateCurr[numDimensions];
-	for (int i = 0; i < numDimensions; i++)
+	double stateCurr[numDimensions_];
+	for (int i = 0; i < numDimensions_; i++)
 		stateCurr[i] = stateFromIn.x[i];
 
 	for (int i = 0; i < numSegments; i++)
@@ -259,7 +257,7 @@ int System::extendTo(State2 &stateFromIn, State2 &stateTowardsIn, Trajectory &tr
 		if (IsInCollision(stateCurr))
 			return 0;
 
-		for (int i = 0; i < numDimensions; i++)
+		for (int i = 0; i < numDimensions_; i++)
 			stateCurr[i] += dists[i];
 	}
 
@@ -283,7 +281,7 @@ double System::evaluateExtensionCost(State2 &stateFromIn, State2 &stateTowardsIn
 	exactConnectionOut = true;
 
 	double distTotal = 0.0;
-	for (int i = 0; i < numDimensions; i++)
+	for (int i = 0; i < numDimensions_; i++)
 	{
 		double distCurr = stateTowardsIn.x[i] - stateFromIn.x[i];
 		distTotal += distCurr * distCurr;
@@ -294,8 +292,8 @@ double System::evaluateExtensionCost(State2 &stateFromIn, State2 &stateTowardsIn
 
 int System::getTrajectory(State2 &stateFromIn, State2 &stateToIn, list<double*> &trajectoryOut)
 {
-	double *stateArr = new double[numDimensions];
-	for (int i = 0; i < numDimensions; i++)
+	double *stateArr = new double[numDimensions_];
+	for (int i = 0; i < numDimensions_; i++)
 		stateArr[i] = stateToIn[i];
 	trajectoryOut.push_front(stateArr);
 
@@ -306,13 +304,13 @@ double System::evaluateCostToGo(State2 &stateIn)
 {
 
 	double radius = 0.0;
-	for (int i = 0; i < numDimensions; i++)
-		radius += regionGoal.size[i] * regionGoal.size[i];
+	for (int i = 0; i < numDimensions_; i++)
+		radius += regionGoal_.size[i] * regionGoal_.size[i];
 	radius = sqrt(radius);
 
 	double dist = 0.0;
-	for (int i = 0; i < numDimensions; i++)
-		dist += (stateIn[i] - regionGoal.center[i]) * (stateIn[0] - regionGoal.center[i]);
+	for (int i = 0; i < numDimensions_; i++)
+		dist += (stateIn[i] - regionGoal_.center[i]) * (stateIn[0] - regionGoal_.center[i]);
 	dist = sqrt(dist);
 
 	return dist - radius;
@@ -337,7 +335,4 @@ bool System::worldToMap(double wx, double wy, double& mx, double& my) {
         return true;
 
     return false;
-}
-
-
 }
