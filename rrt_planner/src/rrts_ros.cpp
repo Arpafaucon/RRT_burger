@@ -11,6 +11,18 @@ using namespace tf;
 //Default Constructor
 namespace rrts_burger
 {
+
+void spinForDebug()
+{
+	volatile int i = 0;
+    char hostname[256];
+    gethostname(hostname, sizeof(hostname));
+    printf("PID %d on %s ready for attach\n", getpid(), hostname);
+    fflush(stdout);
+    while (0 == i)
+        sleep(5);
+}
+
 RRTPlanner::RRTPlanner()
 {
 	//initialize("Whohohohohoh", costmap_2d::Costmap2DROS:: ;
