@@ -66,7 +66,7 @@
 namespace burger_local_planner
 {
 
-const float RADIUS = 0.50F;                   ///< The radius around the robot within which points from the global_plan can be considered as valid intermediary goal.
+const float RADIUS = 0.10F;                   ///< The radius around the robot within which points from the global_plan can be considered as valid intermediary goal.
 const float SQUARED_RADIUS = RADIUS * RADIUS; ///< The radius is squared to simplify calculus on vectors.
 
 /**
@@ -190,6 +190,7 @@ class BurgerPlanner
     base_local_planner::SimpleScoredSamplingPlanner scored_sampling_planner_;
 
     burger_local_planner::BurgerTrajectoryFinder burger_trajectory_finder_;
+    int localGoalIndex_;
 };
 };
 #endif

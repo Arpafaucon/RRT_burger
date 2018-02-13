@@ -125,6 +125,7 @@ BurgerPlanner::BurgerPlanner(std::string name, base_local_planner::LocalPlannerU
                                                                                                      alignment_costs_(planner_util->getCostmap())
 {
   ros::NodeHandle private_nh("~/" + name);
+  localGoalIndex_ = 0;
 
   burger_trajectory_finder_.initialize();
 
@@ -260,6 +261,7 @@ void BurgerPlanner::updatePlanAndLocalCosts(
   for (unsigned int i = 0; i < new_plan.size(); ++i)
   {
     global_plan_[i] = new_plan[i];
+    localGoalIndex_ = 0;
   }
 
   // costs for going away from path
@@ -334,34 +336,52 @@ base_local_planner::Trajectory BurgerPlanner::findBestPath(
   float current_distance_to_goal_from_intermediary;
   bool first_point = true;
 
-  for (std::vector<geometry_msgs::PoseStamped>::iterator it = global_plan_.begin(); it != global_plan_.end(); it++)
+  geometry_msgs::PoseStamped next_point_pose = global_plan_.at(localGoalIndex_);
+
+  Eigen::Vector3f next_point(next_point_pose.pose.position.x, next_point_pose.pose.position.y, tf::getYaw(next_point_pose.pose.orientation));
+
+  Eigen::Vector3f diff_to_robot = next_point - pos;
+  float distance_to_robot = diff_to_robot(0) * diff_to_robot(0) + diff_to_robot(1) * diff_to_robot(1);
+
+  while (distance_to_robot <= SQUARED_RADIUS && localGoalIndex_ < global_plan_.size())
   {
-    Eigen::Vector3f it_point(it->pose.position.x, it->pose.position.y, tf::getYaw(it->pose.orientation));
-    Eigen::Vector3f diff_to_robot = it_point - pos;
-    float distance_to_robot = diff_to_robot(0) * diff_to_robot(0) + diff_to_robot(1) * diff_to_robot(1);
+    localGoalIndex_++;
+    next_point_pose = global_plan_.at(localGoalIndex_);
 
-    // If the point is within a radius around the robot, it can be considered for the goal, if it is the closest to the real goal.
-    if (distance_to_robot <= SQUARED_RADIUS)
-    {
-      goal = it_point;
-      first_point = false;
-      /* ANOTHER STRATEGY
-      Eigen::Vector3f diff_to_goal = true_goal - it_point;
-      float distance_to_goal = diff_to_goal(0) * diff_to_goal(0) + diff_to_goal(1) * diff_to_goal(1);
+    Eigen::Vector3f next_point(next_point_pose.pose.position.x, next_point_pose.pose.position.y, tf::getYaw(next_point_pose.pose.orientation));
 
-      if (distance_to_goal < current_distance_to_goal_from_intermediary || first_point)
-      {
-        current_distance_to_goal_from_intermediary = distance_to_goal;
-        goal = it_point;
-        if (current_distance_to_goal_from_intermediary < 10e-5)
-        {
-          ROS_INFO("Goal in sight!!");
-        }
-        first_point = false;
-      }
-      */
-    }
+    diff_to_robot = next_point - pos;
+    distance_to_robot = diff_to_robot(0) * diff_to_robot(0) + diff_to_robot(1) * diff_to_robot(1);
   }
+
+  // for (std::vector<geometry_msgs::PoseStamped>::iterator it = global_plan_.begin(); it != global_plan_.end(); it++)
+  // {
+  //   Eigen::Vector3f it_point(it->pose.position.x, it->pose.position.y, tf::getYaw(it->pose.orientation));
+  //   Eigen::Vector3f diff_to_robot = it_point - pos;
+  //   float distance_to_robot = diff_to_robot(0) * diff_to_robot(0) + diff_to_robot(1) * diff_to_robot(1);
+
+  //   // If the point is within a radius around the robot, it can be considered for the goal, if it is the closest to the real goal.
+  //   if (distance_to_robot <= SQUARED_RADIUS)
+  //   {
+  //     goal = it_point;
+  //     first_point = false;
+  //     /* ANOTHER STRATEGY
+  //     Eigen::Vector3f diff_to_goal = true_goal - it_point;
+  //     float distance_to_goal = diff_to_goal(0) * diff_to_goal(0) + diff_to_goal(1) * diff_to_goal(1);
+
+  //     if (distance_to_goal < current_distance_to_goal_from_intermediary || first_point)
+  //     {
+  //       current_distance_to_goal_from_intermediary = distance_to_goal;
+  //       goal = it_point;
+  //       if (current_distance_to_goal_from_intermediary < 10e-5)
+  //       {
+  //         ROS_INFO("Goal in sight!!");
+  //       }
+  //       first_point = false;
+  //     }
+  //     */
+  //   }
+  // }
   if (first_point)
   {
     // This means that no point from the global_plan_ was close enough to the robot. We might want to ask for a new global plan...
