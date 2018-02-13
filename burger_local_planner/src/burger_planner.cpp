@@ -382,7 +382,9 @@ base_local_planner::Trajectory BurgerPlanner::findBestPath(
   // std::vector<base_local_planner::Trajectory> all_explored;
   // scored_sampling_planner_.findBestTrajectory(result_traj_, &all_explored);
 
-  result_traj_ = burger_trajectory_finder_.findBestPath(goal, pos, 0.33);
+  bool isTrueGoal = goal == true_goal;
+  bool allowReverse = false;
+  result_traj_ = burger_trajectory_finder_.findBestPath(goal, pos, 0.33, isTrueGoal, allowReverse);
 
 #if 0 
   if (publish_traj_pc_)
