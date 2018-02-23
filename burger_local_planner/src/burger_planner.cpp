@@ -52,6 +52,7 @@ namespace burger_local_planner
 {
 void BurgerPlanner::reconfigure(BurgerPlannerConfig &config)
 {
+  // ROS_INFO("A QUE COUCOU : reconfigure"); // USED
 
   boost::mutex::scoped_lock l(configuration_mutex_);
 
@@ -196,6 +197,7 @@ BurgerPlanner::BurgerPlanner(std::string name, base_local_planner::LocalPlannerU
 // used for visualization only, total_costs are not really total costs
 bool BurgerPlanner::getCellCosts(int cx, int cy, float &path_cost, float &goal_cost, float &occ_cost, float &total_cost)
 {
+  // ROS_INFO("A QUE COUCOU : getCellCost");
 
   path_cost = path_costs_.getCellCosts(cx, cy);
   goal_cost = goal_costs_.getCellCosts(cx, cy);
@@ -217,6 +219,8 @@ bool BurgerPlanner::getCellCosts(int cx, int cy, float &path_cost, float &goal_c
 
 bool BurgerPlanner::setPlan(const std::vector<geometry_msgs::PoseStamped> &orig_global_plan)
 {
+  ROS_INFO("A QUE COUCOU : setPlan");
+
   oscillation_costs_.resetOscillationFlags();
   return planner_util_->setPlan(orig_global_plan);
 }
@@ -230,6 +234,7 @@ bool BurgerPlanner::checkTrajectory(
     Eigen::Vector3f vel,
     Eigen::Vector3f vel_samples)
 {
+  ROS_INFO("A QUE COUCOU : checkTrajectory");
   oscillation_costs_.resetOscillationFlags();
   base_local_planner::Trajectory traj;
   geometry_msgs::PoseStamped goal_pose = global_plan_.back();
@@ -409,6 +414,13 @@ base_local_planner::Trajectory BurgerPlanner::findBestPath(
   bool isTrueGoal = goal == true_goal;
   bool allowReverse = false;
   result_traj_ = burger_trajectory_finder_.findBestPath(goal, pos, 0.33, isTrueGoal, allowReverse);
+
+  double cost = scored_sampling_planner_.scoreTrajectory(result_traj_, -1);
+
+  if (cost < 0)
+  {
+    ROS_WARN("INVALID TRAJECTORY AMAURY YOU MOTHERFUCKER!");
+  }
 
 #if 0 
   if (publish_traj_pc_)

@@ -297,6 +297,7 @@ bool BurgerPlannerROS::computeVelocityCommands(geometry_msgs::Twist &cmd_vel)
     publishGlobalPlan(transformed_plan);
     publishLocalPlan(local_plan);
     base_local_planner::LocalPlannerLimits limits = planner_util_.getCurrentLimits();
+    return true;
     return latchedStopRotateController_.computeVelocityCommandsStopRotate(
         cmd_vel,
         limits.getAccLimits(),
