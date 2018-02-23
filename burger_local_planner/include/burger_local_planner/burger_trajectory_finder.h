@@ -36,7 +36,7 @@ const float SPEED_MIN = 0.05;       ///< Min linear speed
 const float OMEGA_MAX = 2.840;      ///< Mas angular velocit (rad/s)
 const float PI = 3.1415926535;
 const float WHEEL_MAX_SPEED = SPEED_MAX * 0.9;
-const float SPEED_FACTOR = 0.15;
+const float SPEED_FACTOR = 0.05;
 
 const float Kp = 0.5;
 const float Ki = 0.1;
@@ -59,6 +59,7 @@ private:
   float speedRight_, speedLeft_;
 
   float omegai_[3], omegap_[3], omegad_[3];
+  float lastRequestedSpeed_;
 };
 }
 

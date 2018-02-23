@@ -121,7 +121,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 
 	clock_t startTime = clock();
 
-    // Run the algorithm for 10000 iteartions
+    // Run the algorithm for 10000 iterations
     for (int i = 0; i < 2000; i++)
         rrts.iteration();
 
@@ -135,8 +135,10 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	ros::Time plan_time = ros::Time::now();
 
 	int stateIndex = 0;
+	
     for (list<double *>::iterator iter = stateList.begin(); iter != stateList.end(); iter++)
     {
+		ROS_INFO("added vertex in plan");
         double *stateRef = *iter;
 		double world_x, world_y;
 		burgerSystem.mapToWorld(stateRef[0], stateRef[1], world_x, world_y);

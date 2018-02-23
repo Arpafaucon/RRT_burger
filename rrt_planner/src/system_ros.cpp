@@ -229,7 +229,7 @@ int System::sampleState(State2 &randomStateOut)
 
 int System::extendTo(State2 &stateFromIn, State2 &stateTowardsIn, Trajectory &trajectoryOut, bool &exactConnectionOut)
 {
-
+	ROS_DEBUG_THROTTLE("extend from state %lf %lf", stateFromIn.x[0])
 	double *dists = new double[numDimensions_];
 	for (int i = 0; i < numDimensions_; i++)
 		dists[i] = stateTowardsIn.x[i] - stateFromIn.x[i];

@@ -22,6 +22,7 @@ void BurgerTrajectoryFinder::initialize()
     omegap_[0] = 0.0;
     omegap_[1] = 0.0;
     linearSpeed_[0] = 0.0;
+    lastRequestedSpeed_ = 0.0;
 }
 
 void BurgerTrajectoryFinder::initialize(Eigen::Vector3f initialPose)
@@ -37,6 +38,7 @@ void BurgerTrajectoryFinder::initialize(Eigen::Vector3f initialPose)
     omegap_[0] = 0.0;
     omegap_[1] = 0.0;
     linearSpeed_[0] = 0.0;
+    lastRequestedSpeed_ = 0.0;
 }
 
 base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vector3f goal, Eigen::Vector3f pose, float deltaTime, bool isLastGoal, bool allowReverse)
@@ -54,25 +56,28 @@ base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vecto
     }
 
     // thetaGoal_ = goal(2);
-    float requested_speed = SPEED_FACTOR * sqrt(pow((xGoal_ - xPos_[1]) / deltaTime, 2) + pow((yGoal_ - yPos_[1]) / deltaTime, 2));
+    float requestedSpeed = SPEED_FACTOR * sqrt(pow((xGoal_ - xPos_[1]) / deltaTime, 2) + pow((yGoal_ - yPos_[1]) / deltaTime, 2));
 
     if (isLastGoal)
     {
-        linearSpeed_[1] = requested_speed;
+        linearSpeed_[1] = requestedSpeed;
         ROS_INFO("Is last goal!");
     }
     else
     {
         // When it is not the true goal, no need to deccelerate when getting closer to the intermediary goal
-        if (requested_speed < abs(linearSpeed_[0]))
+        if (requestedSpeed < lastRequestedSpeed_)
         {
-            linearSpeed_[1] = abs(linearSpeed_[0]);
+            linearSpeed_[1] = lastRequestedSpeed_;
+            requestedSpeed = lastRequestedSpeed_;
         }
         else
         {
-            linearSpeed_[1] = requested_speed;
+            linearSpeed_[1] = requestedSpeed;
         }
     }
+
+    lastRequestedSpeed_ = requestedSpeed;
 
     if (linearSpeed_[1] - linearSpeed_[0] >= SPEED_DELTA_MAX)
     {
