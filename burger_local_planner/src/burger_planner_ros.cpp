@@ -233,7 +233,7 @@ bool BurgerPlannerROS::burgerComputeVelocityCommands(tf::Stamped<tf::Pose> &glob
   if (path.cost_ < 0)
   {
     ROS_DEBUG_NAMED("burger_local_planner",
-                    "The dwa/burger local planner failed to find a valid plan, cost functions discarded all candidates. This can mean there is an obstacle too close to the robot.");
+                    "The burger local planner failed to find a valid plan, cost functions discarded all candidates. This can mean there is an obstacle too close to the robot.");
     local_plan.clear();
     publishLocalPlan(local_plan);
     return false;
