@@ -15,12 +15,12 @@ namespace rrts_burger
 void spinForDebug()
 {
 	volatile int i = 0;
-    char hostname[256];
-    gethostname(hostname, sizeof(hostname));
-    printf("PID %d on %s ready for attach\n", getpid(), hostname);
-    fflush(stdout);
-    while (0 == i)
-        sleep(5);
+	char hostname[256];
+	gethostname(hostname, sizeof(hostname));
+	printf("PID %d on %s ready for attach\n", getpid(), hostname);
+	fflush(stdout);
+	while (0 == i)
+		sleep(5);
 }
 
 RRTPlanner::RRTPlanner()
@@ -32,12 +32,12 @@ void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS *costmap_
 {
 	if (!initialized_)
 	{
-		ROS_INFO("Begin RRT Initialization");
+		ROS_INFO("Begin Burger RRT Initialization");
 		costmap_ = costmap_ros->getCostmap(); //get the costmap_ from costmap_ros_
 		frame_id_ = costmap_ros->getGlobalFrameID();
 
 		initialized_ = true;
-		ROS_INFO("End RRT Initialization");
+		ROS_INFO("End  Burger RRT Initialization");
 	}
 	else
 		ROS_WARN("This planner has already been initialized... doing nothing");
@@ -56,13 +56,12 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	planner_t rrts = planner_t();
 	ROS_INFO("BurgerRRT is making a plan");
 
-
-    // char hostname[256];
-    // gethostname(hostname, sizeof(hostname));
-    // ROS_INFO("PID %d on %s ready for attach\n", getpid(), hostname);
-    // fflush(stdout);
-    // while (0 == i)
-    //     sleep(5);
+	// char hostname[256];
+	// gethostname(hostname, sizeof(hostname));
+	// ROS_INFO("PID %d on %s ready for attach\n", getpid(), hostname);
+	// fflush(stdout);
+	// while (0 == i)
+	//     sleep(5);
 
 	wx = goal.pose.position.x;
 	wy = goal.pose.position.y;
@@ -71,7 +70,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 		ROS_WARN(
 			"The robot's goal position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized?");
 		return false;
-	}	
+	}
 	ROS_INFO("RRTS Star got goal");
 
 	burgerSystem.worldToMap(wx, wy, goal_x, goal_y);
@@ -94,7 +93,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 		ROS_WARN(
 			"The robot's start position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized?");
 		return false;
-	}	
+	}
 	ROS_INFO("RRTS Star got start");
 	burgerSystem.worldToMap(wx, wy, start_x, start_y);
 	ROS_INFO("RRTS Star 2b");
@@ -104,71 +103,72 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	rootState[1] = start_y;
 
 	//clear the starting cell within the costmap because we know it can't be an obstacle
-    tf::Stamped<tf::Pose> start_pose;
-    tf::poseStampedMsgToTF(start, start_pose);
+	tf::Stamped<tf::Pose> start_pose;
+	tf::poseStampedMsgToTF(start, start_pose);
 	clearRobotCell(start_x_i, start_y_i);
 	ROS_INFO("RRTS Star cleared robot cell");
 
-	 // Initialize the planner
-    rrts.initialize();
-    // This parameter should be larger than 1.5 for asymptotic
-    //   optimality. Larger values will weigh on optimization
-    //   rather than exploration in the RRT* algorithm. Lower
-    //   values, such as 0.1, should recover the RRT.
-    rrts.setGamma(1.5);
+	// Initialize the planner
+	rrts.initialize();
+	// This parameter should be larger than 1.5 for asymptotic
+	//   optimality. Larger values will weigh on optimization
+	//   rather than exploration in the RRT* algorithm. Lower
+	//   values, such as 0.1, should recover the RRT.
+	rrts.setGamma(1.5);
 
 	ROS_INFO("RRT Star completerly initialized");
 
 	clock_t startTime = clock();
 
-    // Run the algorithm for 10000 iterations
-    for (int i = 0; i < 2000; i++)
-        rrts.iteration();
+	// Run the algorithm for 10000 iterations
+	for (int i = 0; i < 2000; i++)
+	{
+		rrts.iteration();
+		ROS_INFO_THROTTLE(30, "burger iterating");
+	}
 
-    clock_t finishTime = clock();
+	clock_t finishTime = clock();
 
 	list<double *> stateList;
-    rrts.getBestTrajectory(stateList);
+	rrts.getBestTrajectory(stateList);
 
 	ROS_INFO("RRT Start finished running");
 
 	ros::Time plan_time = ros::Time::now();
 
 	int stateIndex = 0;
-	
-    for (list<double *>::iterator iter = stateList.begin(); iter != stateList.end(); iter++)
-    {
+
+	for (list<double *>::iterator iter = stateList.begin(); iter != stateList.end(); iter++)
+	{
 		ROS_INFO("added vertex in plan");
-        double *stateRef = *iter;
+		double *stateRef = *iter;
 		double world_x, world_y;
 		burgerSystem.mapToWorld(stateRef[0], stateRef[1], world_x, world_y);
 		geometry_msgs::PoseStamped pose;
-        pose.header.stamp = plan_time;
-        pose.header.frame_id = frame_id_;
-        pose.pose.position.x = world_x;
-        pose.pose.position.y = world_y;
-        pose.pose.position.z = 0.0;
-        pose.pose.orientation.x = 0.0;
-        pose.pose.orientation.y = 0.0;
-        pose.pose.orientation.z = 0.0;
-        pose.pose.orientation.w = 1.0;
+		pose.header.stamp = plan_time;
+		pose.header.frame_id = frame_id_;
+		pose.pose.position.x = world_x;
+		pose.pose.position.y = world_y;
+		pose.pose.position.z = 0.0;
+		pose.pose.orientation.x = 0.0;
+		pose.pose.orientation.y = 0.0;
+		pose.pose.orientation.z = 0.0;
+		pose.pose.orientation.w = 1.0;
 		plan.push_back(pose);
-        // bool coll = system.IsInCollision(stateRef);
+		// bool coll = system.IsInCollision(stateRef);
 
-        //small verif to be sure
-        // cout << "reaching" << system. << endl;
+		//small verif to be sure
+		// cout << "reaching" << system. << endl;
 
-        // resultFile << "W " << stateRef[0] << " " << stateRef[1] << " " << (coll ? "!" : "") << endl;
+		// resultFile << "W " << stateRef[0] << " " << stateRef[1] << " " << (coll ? "!" : "") << endl;
 
-        // delete[] stateRef;
-        // stateIndex++;
-    }
+		// delete[] stateRef;
+		// stateIndex++;
+	}
 
-	ROS_INFO("RRT Star finished filling plan (%lu entries)", plan.size());
+	ROS_INFO_STREAM("RRT Star finished filling plan (entries: " << plan.size() << " )");
 
-
-    // cout << "Time : " << (static_cast<double>(finishTime - startTime)) / CLOCKS_PER_SEC << endl;
-
+	// cout << "Time : " << (static_cast<double>(finishTime - startTime)) / CLOCKS_PER_SEC << endl;
 
 	// plan.push_back(start);
 	// Pose startPose = myPoseStampedMsgToTF(start);
@@ -216,15 +216,42 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	return true;
 }
 
-void RRTPlanner::clearRobotCell(unsigned int mx, unsigned int my) {
-    if (!initialized_) {
-        ROS_ERROR(
-                "This planner has not been initialized yet, but it is being used, please call initialize() before use");
-        return;
-    }
+void RRTPlanner::clearRobotCell(unsigned int mx, unsigned int my)
+{
+	if (!initialized_)
+	{
+		ROS_ERROR(
+			"This planner has not been initialized yet, but it is being used, please call initialize() before use");
+		return;
+	}
 
-    //set the associated costs in the cost map to be free
-    costmap_->setCost(mx, my, costmap_2d::FREE_SPACE);
+	//set the associated costs in the cost map to be free
+	costmap_->setCost(mx, my, costmap_2d::FREE_SPACE);
 }
 
+void RRTPlanner::saveExpToFile(std::ofstream out, planner_t rrts, Burger2D::System burgerSystem)
+{
+	ROS_INFO("saving to stream\n");
+	list<double *> stateList;
+	rrts.getBestTrajectory(stateList);
+	for (list<double *>::iterator iter = stateList.begin(); iter != stateList.end(); iter++)
+	{
+		// ROS_INFO("added vertex in plan");
+		double *stateRef = *iter;
+		double world_x, world_y;
+		burgerSystem.mapToWorld(stateRef[0], stateRef[1], world_x, world_y);
+		ROS_INFO("state: %lf,%lf\n", world_x, world_y);
+		out << "W " << world_x << " " << world_y << endl;
+
+		// bool coll = system.IsInCollision(stateRef);
+
+		//small verif to be sure
+		// cout << "reaching" << system. << endl;
+
+		// resultFile << "W " << stateRef[0] << " " << stateRef[1] << " " << (coll ? "!" : "") << endl;
+
+		// delete[] stateRef;
+		// stateIndex++;
+	}
+}
 };

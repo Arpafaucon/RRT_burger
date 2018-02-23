@@ -229,7 +229,6 @@ int System::sampleState(State2 &randomStateOut)
 
 int System::extendTo(State2 &stateFromIn, State2 &stateTowardsIn, Trajectory &trajectoryOut, bool &exactConnectionOut)
 {
-	ROS_DEBUG_THROTTLE("extend from state %lf %lf", stateFromIn.x[0])
 	double *dists = new double[numDimensions_];
 	for (int i = 0; i < numDimensions_; i++)
 		dists[i] = stateTowardsIn.x[i] - stateFromIn.x[i];
@@ -264,6 +263,7 @@ int System::extendTo(State2 &stateFromIn, State2 &stateTowardsIn, Trajectory &tr
 	if (IsInCollision(stateTowardsIn.x))
 		return 0;
 
+	ROS_DEBUG_THROTTLE(30, "extend from state %lf,%lf to %lf,%lf", stateFromIn.x[0], stateFromIn.x[1], stateTowardsIn.x[0], stateTowardsIn.x[1]);
 	trajectoryOut.endState = new State2(stateTowardsIn);
 	trajectoryOut.totalVariation = distTotal;
 

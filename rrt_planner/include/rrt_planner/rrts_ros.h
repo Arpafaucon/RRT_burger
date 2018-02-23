@@ -10,6 +10,8 @@
 #include <base_local_planner/costmap_model.h>
 #include <array>
 #include <list>
+#include <iostream>	
+#include <fstream>
 
 #include "system_ros.h"
 #include "rrts.hpp"
@@ -50,6 +52,7 @@ class RRTPlanner : public nav_core::BaseGlobalPlanner
 	planner_t planner_;
 
 	void clearRobotCell(const unsigned int mx, const unsigned int my);
+	void saveExpToFile(std::ofstream out, planner_t rrts, Burger2D::System system);
 };
 };
 #endif
