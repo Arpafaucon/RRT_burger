@@ -2,7 +2,7 @@
   <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
 
   <!-- Turtlebot3 -->
-  <include file="$(find turtlebot3_bringup)/launch/turtlebot3_remote.launch" />
+  <!-- <include file="$(find turtlebot3_bringup)/launch/turtlebot3_remote.launch" /> -->
 
   <!-- Map server -->
   <arg name="map_file" default="$(find turtlebot3_navigation)/maps/map.yaml"/>
@@ -16,7 +16,8 @@
   <arg name="cmd_vel_topic" default="/cmd_vel" />
   <arg name="odom_topic" default="odom" />
   <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
-    <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
+    <param name="base_local_planner" value="burger_local_planner/BurgerPlannerROS" />
+    <param name="base_global_planner" value="rrt_planner/RRTPlanner" />
 
     <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="global_costmap" />
     <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_$(arg model).yaml" command="load" ns="local_costmap" />
