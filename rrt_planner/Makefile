@@ -33,8 +33,8 @@ run: rrtstar
 	./rrtstar
 
 debug:
-	@echo $(OBJ)
-	@echo $(DEPS)
+	(roslaunch simulation/tworld.launch)&
+	(roslaunch simulation/navigation.launch)
 
 .PHONY: clean doc mrproper
 

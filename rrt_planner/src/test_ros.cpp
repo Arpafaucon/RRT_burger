@@ -152,6 +152,11 @@ costmap_2d::Costmap2D configCostmap(string fileNameIn,
 	std::vector<surface_t> obstacleList;
 	string line;
 	std::ifstream infile(fileNameIn);
+	if(!infile.is_open())
+	{
+		ROS_ERROR("Couldn't open file. Exiting");
+		exit (EXIT_FAILURE);
+	}
 	/*******************************
      * FILE PARSING 
      ******************************/

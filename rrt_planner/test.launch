@@ -2,6 +2,6 @@
 	<node pkg="tf2_ros" type="static_transform_publisher" name="l1_broadcaster" args="0 0 0 0 0 0 1 world map" />
 	<node pkg="tf2_ros" type="static_transform_publisher" name="l2_broadcaster" args="0 0 0 0 0 0 1 map base_link" />
 	<node pkg="rrt_planner" type="rrt_planner_tester" name="tester" output="screen" required="true">
-		<param name="f" value="$(find rrt_planner)/exp/basicExp.rsc"/>
+		<param name="f" value="$(find rrt_planner)/exp/exp.rsc"/>
 	</node>
 </launch>

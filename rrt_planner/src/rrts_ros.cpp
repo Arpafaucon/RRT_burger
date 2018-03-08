@@ -117,6 +117,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	rrts.setGamma(1.5);
 
 	ROS_INFO("RRT Star completerly initialized");
+	spinForDebug();
 
 	clock_t startTime = clock();
 
