@@ -9,18 +9,30 @@
 #include <sstream>
 #include <unistd.h>
 #include <vector>
+#include <iostream>
+#include <ctime>
+#include <fstream>
+#include <sstream>
 
 #include "rrts_ros.h"
 
-#define TITLE_SIZE 60
 #define COSTMAP_RESOLUTION 10
+#define TITLE_SIZE 200
 
-#define CENTRE(x,y) ((x) + (y))/2
+#define CENTRE(x, y) ((x) + (y)/2)
 
+typedef RRTstar::Planner<Burger2D::State2, Burger2D::Trajectory, Burger2D::System> planner_t;
+typedef RRTstar::Vertex<Burger2D::State2, Burger2D::Trajectory, Burger2D::System> vertex_t;
+typedef std::array<double, SPACE_DIM> point_t;
+typedef std::array<double, 2 * SPACE_DIM> surface_t;
+typedef std::pair<planner_t *, Burger2D::System *> experience_t;
+typedef Burger2D::State2 state_t;
 
 costmap_2d::Costmap2D configCostmap(string fileNameIn,
-				  geometry_msgs::PoseStamped &poseStart,
-				  geometry_msgs::PoseStamped &poseEnd);
+									geometry_msgs::PoseStamped &poseStart,
+									geometry_msgs::PoseStamped &poseEnd,
+									string &expTitle);
+int writeRes(rrts_burger::RRTPlanner planner, std::string &outputDir, const char *fileNameIn, const char *expTitle);
 /**
  * This tutorial demonstrates simple sending of messages over the ROS system.
  */
@@ -44,8 +56,11 @@ int main(int argc, char **argv)
    */
 	ros::NodeHandle n("~");
 	std::string expFileName;
+	std::string outputDir;
 	n.getParam("f", expFileName);
+	n.getParam("odir", outputDir);
 	ROS_INFO_STREAM("got fileName " << expFileName);
+	ROS_INFO_STREAM("got odir " << outputDir);
 
 	/**
    * The advertise() function is how you tell ROS that you want to
@@ -92,9 +107,9 @@ int main(int argc, char **argv)
 	geometry_msgs::PoseStamped start;
 	geometry_msgs::PoseStamped end;
 	ROS_INFO("Created CostMap2D");
-	costmap_2d::Costmap2D costmap = configCostmap(expFileName, start, end);
+	std::string expTitle;
+	costmap_2d::Costmap2D costmap = configCostmap(expFileName, start, end, expTitle);
 	ROS_INFO("Configured CostMap2D");
-	
 
 	*(costmap_ros.getCostmap()) = costmap;
 
@@ -110,6 +125,8 @@ int main(int argc, char **argv)
 	std::vector<geometry_msgs::PoseStamped> plan;
 
 	planner.makePlan(start, end, plan);
+
+	writeRes(planner, outputDir, expFileName.c_str(), expTitle.c_str());
 
 	//   while (ros::ok())
 	//   {
@@ -141,9 +158,23 @@ int main(int argc, char **argv)
 	return 0;
 }
 
+int writeRes(rrts_burger::RRTPlanner planner, std::string &outputDir, const char *fileNameIn, const char *expTitle)
+{
+	char fileNameOut[TITLE_SIZE];
+	snprintf(fileNameOut, TITLE_SIZE, "%s/%s-ros.sol", outputDir.c_str(), expTitle);
+	std::ofstream resultFile(fileNameOut, std::ios::trunc);
+
+	resultFile << expTitle << std::endl;
+	resultFile << fileNameIn << std::endl;
+	planner.saveExpToFile(resultFile);
+	ROS_INFO("saved Exp to file");
+	return 0;
+}
+
 costmap_2d::Costmap2D configCostmap(string fileNameIn,
-				  geometry_msgs::PoseStamped &poseStart,
-				  geometry_msgs::PoseStamped &poseEnd)
+									geometry_msgs::PoseStamped &poseStart,
+									geometry_msgs::PoseStamped &poseEnd,
+									string &expTitleOut)
 {
 	string title;
 	char expTitle[TITLE_SIZE];
@@ -152,19 +183,20 @@ costmap_2d::Costmap2D configCostmap(string fileNameIn,
 	std::vector<surface_t> obstacleList;
 	string line;
 	std::ifstream infile(fileNameIn);
-	if(!infile.is_open())
+	if (!infile.is_open())
 	{
 		ROS_ERROR("Couldn't open file. Exiting");
-		exit (EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	}
 	/*******************************
      * FILE PARSING 
      ******************************/
-	
+
 	std::getline(infile, title);
 	std::cout << "title : " << title << std::endl
-		 << "reading params" << std::endl;
+			  << "reading params" << std::endl;
 	snprintf(expTitle, TITLE_SIZE, "%s", title.c_str());
+	expTitleOut.assign(expTitle);
 	while (std::getline(infile, line))
 	{
 		std::istringstream iss(line);
@@ -244,8 +276,8 @@ costmap_2d::Costmap2D configCostmap(string fileNameIn,
 	/**retranscription */
 	int ox = dim[2];
 	int oy = dim[3];
-	double offx = dim[0]/COSTMAP_RESOLUTION;
-	double offy = dim[1]/COSTMAP_RESOLUTION;
+	double offx = dim[0] / COSTMAP_RESOLUTION;
+	double offy = dim[1] / COSTMAP_RESOLUTION;
 	costmap_2d::Costmap2D costmap(ox, oy, COSTMAP_RESOLUTION, offx, offy);
 	ROS_INFO("created costmap w;h;RES;offx;offy : %u ; %u ; %d ; %lf ; %lf", ox, oy, COSTMAP_RESOLUTION, offx, offy);
 	poseStart.pose.position.x = start[0] / COSTMAP_RESOLUTION;
@@ -255,9 +287,20 @@ costmap_2d::Costmap2D configCostmap(string fileNameIn,
 	poseEnd.pose.position.y = CENTRE(goal[1], goal[3]) / COSTMAP_RESOLUTION;
 	ROS_INFO_STREAM("Goal is " << poseEnd.pose.position.x << ", " << poseEnd.pose.position.y);
 
+	for (std::vector<surface_t>::iterator iter = obstacleList.begin(); iter != obstacleList.end(); iter++)
+	{
+		for (int i = 0; i < (*iter)[2]; i++)
+		{
+			for (int j = 0; j < (*iter)[3]; j++)
+			{
+				double cellx = (*iter)[0] + i;
+				double celly = (*iter)[1] + j;
+				ROS_INFO("filling cell %lf %lf as an obst", cellx, celly);
+			}
+		}
+	}
+
 	//no obstacles for now
-
-
 
 	infile.close();
 	return costmap;
