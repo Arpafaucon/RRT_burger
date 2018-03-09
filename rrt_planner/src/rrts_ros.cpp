@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include "rrt_planner/rrts_ros.h"
 #include "rrt_planner/system_ros.h"
+#include <visualization_msgs/Marker.h>
 
 //register this planner as a BaseGlobalPlanner plugin
 PLUGINLIB_EXPORT_CLASS(rrts_burger::RRTPlanner, nav_core::BaseGlobalPlanner)
@@ -37,26 +38,106 @@ void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS *costmap_
 		costmap_ = costmap_ros->getCostmap(); //get the costmap_ from costmap_ros_
 		frame_id_ = costmap_ros->getGlobalFrameID();
 
+		ros::NodeHandle nodeHandle;
+		// ros::Publisher markerPubInsta = nodeHandle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1, true);
+		markerPub_ = nodeHandle.advertise<visualization_msgs::Marker>("visualization_marker", 1, true);
+
 		initialized_ = true;
 		ROS_INFO("End  Burger RRT Initialization");
 	}
 	else
+	{
 		ROS_WARN("This planner has already been initialized... doing nothing");
+	}
+}
+
+bool RRTPlanner::publishStatesRviz(list<double *> stateList)
+{
+	if (!initialized_ || system_ == NULL)
+	{
+		ROS_ERROR("Invalid configuration. Unable to publish");
+		return false;
+	}
+	visualization_msgs::Marker marker;
+	int index = 0;
+	marker.header.frame_id = frame_id_;
+	marker.header.stamp = ros::Time::now();
+
+	// Set the namespace and id for this marker.  This serves to create a unique ID
+	// Any marker sent with the same namespace and id will overwrite the old one
+	marker.ns = "state_list";
+	marker.id = 0;
+	// Set the marker type.  Initially this is CUBE, and cycles between that and SPHERE, ARROW, and CYLINDER
+	marker.type = visualization_msgs::Marker::LINE_LIST;
+
+	// Set the marker action.  Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
+	marker.action = visualization_msgs::Marker::ADD;
+		// Set the scale of the marker -- 1x1x1 here means 1m on a side
+		marker.scale.x = 1.0;
+		marker.scale.y = 1.0;
+		marker.scale.z = 0.1;
+		marker.pose.orientation.x = 0.0;
+		marker.pose.orientation.y = 0.0;
+		marker.pose.orientation.z = 0.0;
+		marker.pose.orientation.w = 1.0;
+
+
+		marker.lifetime = ros::Duration(3000);
+
+		// Set the color -- be sure to set alpha to something non-zero!
+		marker.color.r = 0.0f;
+		marker.color.g = 1.0f;
+		marker.color.b = 0.0f;
+		marker.color.a = 1.0;
+	for (list<double *>::iterator iter = stateList.begin(); iter != stateList.end(); iter++)
+	{
+		visualization_msgs::Marker marker;
+
+		// Set the pose of the marker.  This is a full 6DOF pose relative to the frame/time specified in the header
+		double *stateRef = *iter;
+		double world_x, world_y;
+		system_->mapToWorld(stateRef[0], stateRef[1], world_x, world_y);
+		geometry_msgs::Point point;
+		point.x = world_x;
+		point.y = world_y;
+		point.z = 0;
+
+		// Publish the marker
+		// while (markerPub_->getNumSubscribers() < 1)
+		// {
+		// 	if (!ros::ok())
+		// 	{
+		// 		return;
+		// 	}
+		// 	ROS_WARN_ONCE("Please create a subscriber to the marker");
+		// 	sleep(1);
+		// }
+		marker.points.push_back(point);
+	}
+	ROS_INFO("attempt to publish message");
+	markerPub_.publish(marker);
+	ROS_INFO("published shape");
+	return true;
 }
 
 bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometry_msgs::PoseStamped &goal,
 						  std::vector<geometry_msgs::PoseStamped> &plan)
 {
+	if (!initialized_)
+	{
+		ROS_ERROR("Planner not initialized. Exiting");
+		return false;
+	}
 	static const int goalSize = 2; // in cells
 	double wx, wy, rwx, rwy;
 	unsigned int start_x_i, start_y_i, goal_x_i, goal_y_i;
 	double start_x, start_y, goal_x, goal_y;
 	ROS_INFO("RRTS Star called");
-	if(planner_ != NULL)
+	if (planner_ != NULL)
 	{
 		delete planner_;
 	}
-	if(system_ != NULL)
+	if (system_ != NULL)
 	{
 		delete system_;
 	}
@@ -103,7 +184,6 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	burgerSystem->regionOperating_ = operatingRegion;
 	ROS_INFO("Read costmap dimension %d %d", sizeX, sizeY);
 
-
 	rrts->setSystem(*burgerSystem);
 	ROS_INFO("RRTS Star set sytem");
 
@@ -118,7 +198,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	}
 	ROS_INFO("RRTS Star got start");
 	burgerSystem->worldToMap(wx, wy, start_x, start_y);
-	
+
 	burgerSystem->mapToWorld(start_x, start_y, rwx, rwy);
 	ROS_INFO("RRTS Star got start (%lf, %lf) [in world %lf %lf | rev %lf %lf]", start_x, start_y, wx, wy, rwx, rwy);
 	ROS_INFO("RRTS Star 2b");
@@ -251,6 +331,9 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	// }
 
 	// plan.push_back(goal);
+	ROS_INFO("Publishing to rviz...");
+	publishStatesRviz(stateList);
+
 	ROS_INFO("Plan finished");
 	return true;
 }
@@ -268,7 +351,7 @@ void RRTPlanner::clearRobotCell(unsigned int mx, unsigned int my)
 	costmap_->setCost(mx, my, costmap_2d::FREE_SPACE);
 }
 
-void RRTPlanner::saveExpToFile(std::ofstream& out)
+void RRTPlanner::saveExpToFile(std::ofstream &out)
 {
 	ROS_INFO("saving to stream\n");
 	list<double *> stateList;
@@ -295,7 +378,7 @@ void RRTPlanner::saveExpToFile(std::ofstream& out)
 		// delete[] stateRef;
 		// stateIndex++;
 	}
-	ROS_INFO("filling tree : %d entries", planner_->numVertices );
+	ROS_INFO("filling tree : %d entries", planner_->numVertices);
 	for (std::list<vertex_t *>::iterator iter = planner_->listVertices.begin(); iter != planner_->listVertices.end(); iter++)
 	{
 		double wcx, wcy, wpx, wpy;
@@ -314,8 +397,6 @@ void RRTPlanner::saveExpToFile(std::ofstream& out)
 		wcy = stateCurr[1];
 		wpx = stateParent[0];
 		wpy = stateParent[1];
-
-		
 
 		out << "T "
 			<< wpx << " " << wpy

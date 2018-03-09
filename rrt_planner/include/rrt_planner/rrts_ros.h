@@ -44,6 +44,7 @@ class RRTPlanner : public nav_core::BaseGlobalPlanner
 				  const geometry_msgs::PoseStamped &goal,
 				  std::vector<geometry_msgs::PoseStamped> &plan);
 	void saveExpToFile(std::ofstream& out);
+	bool publishStatesRviz(std::list<double *> stateList);
 
   private:
 	costmap_2d::Costmap2D *costmap_;
@@ -51,6 +52,11 @@ class RRTPlanner : public nav_core::BaseGlobalPlanner
 	bool initialized_;
 	Burger2D::System* system_ = NULL;
 	planner_t* planner_ = NULL;
+
+	// visualisation part
+	// ros::NodeHandle* nodeHandle_;
+	ros::Publisher markerPub_;
+	unsigned int msgIndex_ = 0;
 
 	void clearRobotCell(const unsigned int mx, const unsigned int my);
 };
