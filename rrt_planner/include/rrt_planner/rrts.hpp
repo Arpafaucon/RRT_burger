@@ -466,7 +466,7 @@ int RRTstar::Planner<State, Trajectory, System>::iteration()
     // 1. Sample a new state
     State stateRandom;
     system->sampleState(stateRandom);
-
+    // printf("Random state = %d, %d", stateRandom[0], stateRandom[1]);
     // 2. Compute the set of all near vertices
     std::vector<Vertex<State, Trajectory, System> *> vectorNearVertices;
     getNearVertices(stateRandom, vectorNearVertices);
@@ -481,16 +481,16 @@ int RRTstar::Planner<State, Trajectory, System>::iteration()
 
         // 3.a Extend the nearest
         if (getNearestVertex(stateRandom, vertexParent) <= 0)
-            return 0;
+            return -1;
         if (system->extendTo(vertexParent->getState(), stateRandom, trajectory, exactConnection) <= 0)
-            return 0;
+            return -2;
     }
     else
     {
 
         // 3.b Extend the best parent within the near vertices
         if (findBestParent(stateRandom, vectorNearVertices, vertexParent, trajectory, exactConnection) <= 0)
-            return 0;
+            return -3;
     }
 
     // 3.c add the trajectory from the best parent to the tree

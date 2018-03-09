@@ -10,7 +10,7 @@
 #include <base_local_planner/costmap_model.h>
 #include <array>
 #include <list>
-#include <iostream>	
+#include <iostream>
 #include <fstream>
 
 #include "system_ros.h"
@@ -28,7 +28,6 @@ typedef RRTstar::Vertex<Burger2D::State2, Burger2D::Trajectory, Burger2D::System
 typedef std::array<double, SPACE_DIM> point_t;
 typedef std::array<double, 2 * SPACE_DIM> surface_t;
 typedef std::pair<planner_t *, Burger2D::System *> experience_t;
-
 
 namespace rrts_burger
 {
@@ -49,7 +48,7 @@ class RRTPlanner : public nav_core::BaseGlobalPlanner
 	string frame_id_;
 	bool initialized_;
 	// Burger2D::System system_;
-	planner_t planner_;
+	// planner_t planner_;
 
 	void clearRobotCell(const unsigned int mx, const unsigned int my);
 	void saveExpToFile(std::ofstream out, planner_t rrts, Burger2D::System system);

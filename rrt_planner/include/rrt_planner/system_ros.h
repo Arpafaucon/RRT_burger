@@ -11,7 +11,6 @@
 
 #define DISCRETIZATION_STEP 0.01
 
-
 namespace Burger2D
 {
 
@@ -74,6 +73,7 @@ public:
      */
 class State2
 {
+private:
   static const int numDimensions = 2;
   double x[numDimensions] = {0};
 
@@ -202,12 +202,7 @@ class System
   costmap_2d::Costmap2D *costmap_;
   State2 rootState_;
   bool initalized_;
-  /*!
-         * \brief The operating region
-         *
-         * More elaborate description
-         */
-  region2 regionOperating_;
+
   /**
    * used in mapto world and world to map: 
    * if 0.0 -> world cooridnates are the bottom left corner
@@ -224,6 +219,13 @@ public:
          * More elaborate description
          */
   region2 regionGoal_;
+
+  /*!
+         * \brief The operating region
+         *
+         * More elaborate description
+         */
+  region2 regionOperating_;
 
   /*!
          * \brief The list of all obstacles
@@ -255,10 +257,8 @@ public:
          */
   int getNumDimensions() { return numDimensions_; }
 
-
-  void mapToWorld(double mx, double my, double& wx, double& wy);
-  bool worldToMap(double wx, double wy, double& mx, double& my);
-  
+  void mapToWorld(double mx, double my, double &wx, double &wy);
+  bool worldToMap(double wx, double wy, double &mx, double &my);
 
   /*!
          * \brief Returns a reference to the root state.
@@ -346,8 +346,6 @@ public:
          *
          */
   int getTrajectory(State2 &stateFromIn, State2 &stateToIn, std::list<double *> &trajectoryOut);
-
-
 };
 }
 
