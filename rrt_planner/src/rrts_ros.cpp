@@ -1,6 +1,7 @@
 #include <pluginlib/class_list_macros.h>
 #include <unistd.h>
 #include "rrt_planner/rrts_ros.h"
+#include "rrt_planner/system_ros.h"
 
 //register this planner as a BaseGlobalPlanner plugin
 PLUGINLIB_EXPORT_CLASS(rrts_burger::RRTPlanner, nav_core::BaseGlobalPlanner)
@@ -52,8 +53,18 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	unsigned int start_x_i, start_y_i, goal_x_i, goal_y_i;
 	double start_x, start_y, goal_x, goal_y;
 	ROS_INFO("RRTS Star called");
-	Burger2D::System burgerSystem(costmap_);
-	planner_t rrts = planner_t();
+	if(planner_ != NULL)
+	{
+		delete planner_;
+	}
+	if(system_ != NULL)
+	{
+		delete system_;
+	}
+	Burger2D::System *burgerSystem = new Burger2D::System(costmap_);
+	planner_t *rrts = new planner_t();
+	planner_ = rrts;
+	system_ = burgerSystem;
 	ROS_INFO("BurgerRRT is making a plan");
 
 	// char hostname[256];
@@ -73,16 +84,16 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	}
 	ROS_INFO("RRTS Star got goal");
 
-	burgerSystem.worldToMap(wx, wy, goal_x, goal_y);
+	burgerSystem->worldToMap(wx, wy, goal_x, goal_y);
 	Burger2D::region2 goalRegion;
 	goalRegion.center[0] = goal_x;
 	goalRegion.center[1] = goal_y;
 	goalRegion.size[0] = goalSize;
 	goalRegion.size[1] = goalSize;
-	burgerSystem.regionGoal_ = goalRegion;
+	burgerSystem->regionGoal_ = goalRegion;
 	ROS_INFO("RRTS Star initialized goal");
 
-	rrts.setSystem(burgerSystem);
+	rrts->setSystem(*burgerSystem);
 	ROS_INFO("RRTS Star set sytem");
 
 	// parsing start position
@@ -95,9 +106,9 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 		return false;
 	}
 	ROS_INFO("RRTS Star got start");
-	burgerSystem.worldToMap(wx, wy, start_x, start_y);
+	burgerSystem->worldToMap(wx, wy, start_x, start_y);
 	ROS_INFO("RRTS Star 2b");
-	Burger2D::State2 &rootState = rrts.getRootVertex().getState();
+	Burger2D::State2 &rootState = rrts->getRootVertex().getState();
 	ROS_INFO("RRTS Star got root vertex");
 	rootState[0] = start_x;
 	rootState[1] = start_y;
@@ -109,29 +120,29 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	ROS_INFO("RRTS Star cleared robot cell");
 
 	// Initialize the planner
-	rrts.initialize();
+	rrts->initialize();
 	// This parameter should be larger than 1.5 for asymptotic
 	//   optimality. Larger values will weigh on optimization
 	//   rather than exploration in the RRT* algorithm. Lower
 	//   values, such as 0.1, should recover the RRT.
-	rrts.setGamma(1.5);
+	rrts->setGamma(1.5);
 
 	ROS_INFO("RRT Star completerly initialized");
-	spinForDebug();
+	// spinForDebug();
 
 	clock_t startTime = clock();
 
 	// Run the algorithm for 10000 iterations
 	for (int i = 0; i < 2000; i++)
 	{
-		rrts.iteration();
+		rrts->iteration();
 		ROS_INFO_THROTTLE(30, "burger iterating");
 	}
 
 	clock_t finishTime = clock();
 
 	list<double *> stateList;
-	rrts.getBestTrajectory(stateList);
+	rrts->getBestTrajectory(stateList);
 
 	ROS_INFO("RRT Start finished running");
 
@@ -144,7 +155,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 		ROS_INFO("added vertex in plan");
 		double *stateRef = *iter;
 		double world_x, world_y;
-		burgerSystem.mapToWorld(stateRef[0], stateRef[1], world_x, world_y);
+		burgerSystem->mapToWorld(stateRef[0], stateRef[1], world_x, world_y);
 		geometry_msgs::PoseStamped pose;
 		pose.header.stamp = plan_time;
 		pose.header.frame_id = frame_id_;
@@ -230,17 +241,18 @@ void RRTPlanner::clearRobotCell(unsigned int mx, unsigned int my)
 	costmap_->setCost(mx, my, costmap_2d::FREE_SPACE);
 }
 
-void RRTPlanner::saveExpToFile(std::ofstream out, planner_t rrts, Burger2D::System burgerSystem)
+void RRTPlanner::saveExpToFile(std::ofstream& out)
 {
 	ROS_INFO("saving to stream\n");
 	list<double *> stateList;
-	rrts.getBestTrajectory(stateList);
+	// Burger2D::System burgerSystem = rrts->getSystem();
+	planner_->getBestTrajectory(stateList);
 	for (list<double *>::iterator iter = stateList.begin(); iter != stateList.end(); iter++)
 	{
 		// ROS_INFO("added vertex in plan");
 		double *stateRef = *iter;
 		double world_x, world_y;
-		burgerSystem.mapToWorld(stateRef[0], stateRef[1], world_x, world_y);
+		system_->mapToWorld(stateRef[0], stateRef[1], world_x, world_y);
 		ROS_INFO("state: %lf,%lf\n", world_x, world_y);
 		out << "W " << world_x << " " << world_y << endl;
 
@@ -253,6 +265,28 @@ void RRTPlanner::saveExpToFile(std::ofstream out, planner_t rrts, Burger2D::Syst
 
 		// delete[] stateRef;
 		// stateIndex++;
+	}
+	ROS_INFO("filling tree : %d entries", planner_->numVertices );
+	for (std::list<vertex_t *>::iterator iter = planner_->listVertices.begin(); iter != planner_->listVertices.end(); iter++)
+	{
+		double wcx, wcy, wpx, wpy;
+		vertex_t &vertexCurr = **iter;
+
+		vertex_t &vertexParent = vertexCurr.getParent();
+
+		if (&vertexParent == NULL)
+			continue;
+
+		state_t &stateCurr = vertexCurr.getState();
+		state_t &stateParent = vertexParent.getState();
+		system_->mapToWorld(stateCurr[0], stateCurr[1], wcx, wcy);
+		system_->mapToWorld(stateParent[0], stateParent[1], wpx, wpy);
+
+		
+
+		out << "T "
+			<< wpx << " " << wpy
+			<< " " << wcx << " " << wcy << endl;
 	}
 }
 };

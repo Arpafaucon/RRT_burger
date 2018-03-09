@@ -16,8 +16,8 @@
 #include "system_ros.h"
 #include "rrts.hpp"
 
-#ifndef RRT_PLANNER_CPP
-#define RRT_PLANNER_CPP
+#ifndef RRTS_ROS_H
+#define RRTS_ROS_H
 
 #define SPACE_DIM 2
 
@@ -28,6 +28,7 @@ typedef RRTstar::Vertex<Burger2D::State2, Burger2D::Trajectory, Burger2D::System
 typedef std::array<double, SPACE_DIM> point_t;
 typedef std::array<double, 2 * SPACE_DIM> surface_t;
 typedef std::pair<planner_t *, Burger2D::System *> experience_t;
+typedef Burger2D::State2 state_t;
 
 
 namespace rrts_burger
@@ -43,16 +44,16 @@ class RRTPlanner : public nav_core::BaseGlobalPlanner
 	bool makePlan(const geometry_msgs::PoseStamped &start,
 				  const geometry_msgs::PoseStamped &goal,
 				  std::vector<geometry_msgs::PoseStamped> &plan);
+	void saveExpToFile(std::ofstream& out);
 
   private:
 	costmap_2d::Costmap2D *costmap_;
 	string frame_id_;
 	bool initialized_;
-	// Burger2D::System system_;
-	planner_t planner_;
+	Burger2D::System* system_ = NULL;
+	planner_t* planner_ = NULL;
 
 	void clearRobotCell(const unsigned int mx, const unsigned int my);
-	void saveExpToFile(std::ofstream out, planner_t rrts, Burger2D::System system);
 };
 };
 #endif
