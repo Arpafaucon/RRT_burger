@@ -26,7 +26,8 @@ P...
 """
 # import os
 
-from solexp_classes import Solution, Experience
+import sys
+from solexp_classes_untyped import Solution, Experience
 
 
 def main():
@@ -38,7 +39,10 @@ def main():
     # print(experience)
     # dispExp(experience)
     sol = Solution()
-    sol.configFromFile('exp/basicExp.sol')
+    filename = 'exp/basicExp.sol'
+    if(len(sys.argv) >= 2):
+        filename = sys.argv[1]
+    sol.configFromFile(filename)
     print(sol.exp)
     print(sol)
     sol.display(displayTree=True)
