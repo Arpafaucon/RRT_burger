@@ -4,5 +4,7 @@
 	<node pkg="rrt_planner" type="rrt_planner_tester" name="tester" output="screen" required="true">
 		<param name="f" value="$(find rrt_planner)/exp/exp.rsc"/>
 		<param name="odir" value="$(find rrt_planner)/exp"/>
+		<!-- size (in m) of a grid cell -->
+		<param name="res" value="0.1"/>
 	</node>
 </launch>

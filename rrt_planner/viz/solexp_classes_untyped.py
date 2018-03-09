@@ -162,10 +162,10 @@ class Solution:
 	def display(self, displayTree=True, displayPath=True):
 
 		fig, ax = self.exp.display(show=False)
-		if(displayPath):
+		if(displayPath and len(self.path) > 0):
 			pathX, pathY = zip(*self.path)
 			ax.plot(pathX, pathY, 'g-')
-
+    
 		if(displayTree):
 			lineCol = mc.LineCollection(self.tree, linewidths=0.5, colors='lightblue')
 			ax.add_collection(lineCol)
