@@ -178,6 +178,7 @@ bool System::isReachingTarget(State2 &stateIn)
 
 	for (int i = 0; i < numDimensions_; i++)
 	{
+		ROS_INFO_THROTTLE(2, "regienGoal_.center[i] = %lf and statein.x[i] = %lf", regionGoal_.center[i], stateIn.x[i]);
 		if (fabs(stateIn.x[i] - regionGoal_.center[i]) > regionGoal_.size[i] / 2.0)
 			return false;
 	}
@@ -214,7 +215,7 @@ int System::sampleState(State2 &randomStateOut)
 {
 
 	// randomStateOut.setNumDimensions(numDimensions);
-
+	ROS_INFO_THROTTLE(2, "regionOperating_ : size = %lf, %lf ; center %lf,%lf", regionOperating_.size[0], regionOperating_.size[1], regionOperating_.center[0], regionOperating_.center[0]);
 	for (int i = 0; i < numDimensions_; i++)
 	{
 
@@ -238,6 +239,17 @@ int System::extendTo(State2 &stateFromIn, State2 &stateTowardsIn, Trajectory &tr
 		distTotal += dists[i] * dists[i];
 	distTotal = sqrt(distTotal);
 
+	static const int DIST_MAX_BT_POINTS = 5.0;
+
+	State2 newTowardState = stateTowardsIn;
+	if (distTotal >= DIST_MAX_BT_POINTS)
+	{
+		for (int i = 0; i < numDimensions_; i++)
+			newTowardState.x[i] = dists[i] * DIST_MAX_BT_POINTS / distTotal + stateFromIn.x[i];
+
+		distTotal = DIST_MAX_BT_POINTS;
+	}
+
 	double incrementTotal = distTotal / DISCRETIZATION_STEP;
 
 	// normalize the distance according to the disretization step
@@ -260,11 +272,11 @@ int System::extendTo(State2 &stateFromIn, State2 &stateTowardsIn, Trajectory &tr
 			stateCurr[i] += dists[i];
 	}
 
-	if (IsInCollision(stateTowardsIn.x))
+	if (IsInCollision(newTowardState.x))
 		return 0;
 
 	ROS_DEBUG_THROTTLE(30, "extend from state %lf,%lf to %lf,%lf", stateFromIn.x[0], stateFromIn.x[1], stateTowardsIn.x[0], stateTowardsIn.x[1]);
-	trajectoryOut.endState = new State2(stateTowardsIn);
+	trajectoryOut.endState = new State2(newTowardState);
 	trajectoryOut.totalVariation = distTotal;
 
 	delete[] dists;
@@ -290,7 +302,7 @@ double System::evaluateExtensionCost(State2 &stateFromIn, State2 &stateTowardsIn
 	return sqrt(distTotal);
 }
 
-int System::getTrajectory(State2 &stateFromIn, State2 &stateToIn, list<double*> &trajectoryOut)
+int System::getTrajectory(State2 &stateFromIn, State2 &stateToIn, list<double *> &trajectoryOut)
 {
 	double *stateArr = new double[numDimensions_];
 	for (int i = 0; i < numDimensions_; i++)
@@ -316,23 +328,25 @@ double System::evaluateCostToGo(State2 &stateIn)
 	return dist - radius;
 }
 
-void System::mapToWorld(double mx, double my, double& wx, double& wy) {
-    wx = costmap_->getOriginX() + (mx+convert_offset_) * costmap_->getResolution();
-    wy = costmap_->getOriginY() + (my+convert_offset_) * costmap_->getResolution();
+void System::mapToWorld(double mx, double my, double &wx, double &wy)
+{
+	wx = costmap_->getOriginX() + (mx + convert_offset_) * costmap_->getResolution();
+	wy = costmap_->getOriginY() + (my + convert_offset_) * costmap_->getResolution();
 }
 
-bool System::worldToMap(double wx, double wy, double& mx, double& my) {
-    double origin_x = costmap_->getOriginX(), origin_y = costmap_->getOriginY();
-    double resolution = costmap_->getResolution();
+bool System::worldToMap(double wx, double wy, double &mx, double &my)
+{
+	double origin_x = costmap_->getOriginX(), origin_y = costmap_->getOriginY();
+	double resolution = costmap_->getResolution();
 
-    if (wx < origin_x || wy < origin_y)
-        return false;
+	if (wx < origin_x || wy < origin_y)
+		return false;
 
-    mx = (wx - origin_x) / resolution - convert_offset_;
-    my = (wy - origin_y) / resolution - convert_offset_;
+	mx = (wx - origin_x) / resolution - convert_offset_;
+	my = (wy - origin_y) / resolution - convert_offset_;
 
-    if (mx < costmap_->getSizeInCellsX() && my < costmap_->getSizeInCellsY())
-        return true;
+	if (mx < costmap_->getSizeInCellsX() && my < costmap_->getSizeInCellsY())
+		return true;
 
-    return false;
+	return false;
 }

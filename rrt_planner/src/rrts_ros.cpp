@@ -91,6 +91,14 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	goalRegion.size[0] = goalSize;
 	goalRegion.size[1] = goalSize;
 	burgerSystem->regionGoal_ = goalRegion;
+
+	Burger2D::region2 operatingRegion;
+	operatingRegion.center[0] = 0;
+	operatingRegion.center[1] = 0;
+	operatingRegion.size[0] = 500;
+	operatingRegion.size[1] = 500;
+	burgerSystem->regionOperating_ = operatingRegion;
+
 	ROS_INFO("RRTS Star initialized goal");
 
 	rrts->setSystem(*burgerSystem);
@@ -109,6 +117,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	burgerSystem->worldToMap(wx, wy, start_x, start_y);
 	ROS_INFO("RRTS Star 2b");
 	Burger2D::State2 &rootState = rrts->getRootVertex().getState();
+	// ROS_INFO("rrts.getRootVertex.getstate donne %lf, %lf", rootState[0], rootState[1]);
 	ROS_INFO("RRTS Star got root vertex");
 	rootState[0] = start_x;
 	rootState[1] = start_y;
@@ -120,12 +129,15 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	ROS_INFO("RRTS Star cleared robot cell");
 
 	// Initialize the planner
-	rrts->initialize();
+	if (rrts->initialize() == 0)
+	{
+		ROS_WARN("RRTS inititialize failed!");
+	}
 	// This parameter should be larger than 1.5 for asymptotic
 	//   optimality. Larger values will weigh on optimization
 	//   rather than exploration in the RRT* algorithm. Lower
 	//   values, such as 0.1, should recover the RRT.
-	rrts->setGamma(1.5);
+	rrts->setGamma(0.5);
 
 	ROS_INFO("RRT Star completerly initialized");
 	// spinForDebug();
@@ -133,16 +145,25 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	clock_t startTime = clock();
 
 	// Run the algorithm for 10000 iterations
-	for (int i = 0; i < 2000; i++)
+	for (int i = 0; i < 10000; i++)
 	{
-		rrts->iteration();
-		ROS_INFO_THROTTLE(30, "burger iterating");
+		int error = rrts->iteration();
+		if (error < 0)
+		{
+			ROS_WARN("rrts.iteration failed error %d", error);
+		}
+		// ROS_INFO("number of vertice : %d", rrts.numVertices);
+		ROS_INFO_THROTTLE(2, "burger iterating");
 	}
 
 	clock_t finishTime = clock();
 
 	list<double *> stateList;
-	rrts->getBestTrajectory(stateList);
+	if (rrts->getBestTrajectory(stateList) == 0)
+	{
+		ROS_WARN("rrts.getBestTrajectory failed");
+	}
+	ROS_INFO("stateList length = %d", stateList.size());
 
 	ROS_INFO("RRT Start finished running");
 

@@ -10,7 +10,7 @@
 #include <base_local_planner/costmap_model.h>
 #include <array>
 #include <list>
-#include <iostream>	
+#include <iostream>
 #include <fstream>
 
 #include "system_ros.h"
@@ -29,7 +29,6 @@ typedef std::array<double, SPACE_DIM> point_t;
 typedef std::array<double, 2 * SPACE_DIM> surface_t;
 typedef std::pair<planner_t *, Burger2D::System *> experience_t;
 typedef Burger2D::State2 state_t;
-
 
 namespace rrts_burger
 {
