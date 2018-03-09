@@ -29,6 +29,14 @@ rrtstar: $(OBJ)
 	echo $(I_DIR)
 	$(CXX) -o $(BUILD_DIR)/$@ $^ $(CFLAGS)
 
+cmd: 
+	cd ~/catkin_ws &&\
+	catkin_make --pkg rrt_planner -DCMAKE_BUILD_TYPE=Debug &&\
+	cd -
+
+rosTest: 
+	roslaunch ./test.launch
+
 run: rrtstar
 	./rrtstar
 
