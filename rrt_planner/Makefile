@@ -29,6 +29,8 @@ rrtstar: $(OBJ)
 	echo $(I_DIR)
 	$(CXX) -o $(BUILD_DIR)/$@ $^ $(CFLAGS)
 
+.PHONY: clean doc mrproper viz debug rosTest cmd
+
 cmd: 
 	cd ~/catkin_ws &&\
 	catkin_make --pkg rrt_planner -DCMAKE_BUILD_TYPE=Debug &&\
@@ -37,6 +39,8 @@ cmd:
 rosTest: 
 	roslaunch ./test.launch
 
+
+
 run: rrtstar
 	./rrtstar
 
@@ -44,7 +48,8 @@ debug:
 	(roslaunch simulation/tworld.launch)&
 	(roslaunch simulation/navigation.launch)
 
-.PHONY: clean doc mrproper
+viz:
+	python viz/viz.py exp/basicExp-ros.sol
 
 clean:
 	$(RM) build/*

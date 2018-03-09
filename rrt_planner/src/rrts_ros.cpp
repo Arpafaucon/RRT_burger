@@ -48,8 +48,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 						  std::vector<geometry_msgs::PoseStamped> &plan)
 {
 	static const int goalSize = 2; // in cells
-	double wx, wy;
-	volatile int i = 0;
+	double wx, wy, rwx, rwy;
 	unsigned int start_x_i, start_y_i, goal_x_i, goal_y_i;
 	double start_x, start_y, goal_x, goal_y;
 	ROS_INFO("RRTS Star called");
@@ -79,12 +78,14 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	if (!costmap_->worldToMap(wx, wy, goal_x_i, goal_y_i))
 	{
 		ROS_WARN(
-			"The robot's goal position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized?");
+			"The robot's goal position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized? %d %d", goal_x_i, goal_y_i);
 		return false;
 	}
-	ROS_INFO("RRTS Star got goal");
 
 	burgerSystem->worldToMap(wx, wy, goal_x, goal_y);
+	burgerSystem->mapToWorld(goal_x, goal_y, rwx, rwy);
+	ROS_INFO("RRTS Star got goal (%lf, %lf) [in world %lf %lf | rev=(%lf, %lf)]", goal_x, goal_y, wx, wy, rwx, rwy);
+
 	Burger2D::region2 goalRegion;
 	goalRegion.center[0] = goal_x;
 	goalRegion.center[1] = goal_y;
@@ -93,13 +94,15 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	burgerSystem->regionGoal_ = goalRegion;
 
 	Burger2D::region2 operatingRegion;
-	operatingRegion.center[0] = 0;
-	operatingRegion.center[1] = 0;
-	operatingRegion.size[0] = 500;
-	operatingRegion.size[1] = 500;
+	int sizeX = costmap_->getSizeInCellsX();
+	int sizeY = costmap_->getSizeInCellsY();
+	operatingRegion.center[0] = sizeX / 2.;
+	operatingRegion.center[1] = sizeY / 2.;
+	operatingRegion.size[0] = sizeX;
+	operatingRegion.size[1] = sizeY;
 	burgerSystem->regionOperating_ = operatingRegion;
+	ROS_INFO("Read costmap dimension %d %d", sizeX, sizeY);
 
-	ROS_INFO("RRTS Star initialized goal");
 
 	rrts->setSystem(*burgerSystem);
 	ROS_INFO("RRTS Star set sytem");
@@ -110,11 +113,14 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	if (!costmap_->worldToMap(wx, wy, start_x_i, start_y_i))
 	{
 		ROS_WARN(
-			"The robot's start position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized?");
+			"The robot's start position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized? %d %d", start_x_i, start_y_i);
 		return false;
 	}
 	ROS_INFO("RRTS Star got start");
 	burgerSystem->worldToMap(wx, wy, start_x, start_y);
+	
+	burgerSystem->mapToWorld(start_x, start_y, rwx, rwy);
+	ROS_INFO("RRTS Star got start (%lf, %lf) [in world %lf %lf | rev %lf %lf]", start_x, start_y, wx, wy, rwx, rwy);
 	ROS_INFO("RRTS Star 2b");
 	Burger2D::State2 &rootState = rrts->getRootVertex().getState();
 	// ROS_INFO("rrts.getRootVertex.getstate donne %lf, %lf", rootState[0], rootState[1]);
@@ -163,13 +169,13 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	{
 		ROS_WARN("rrts.getBestTrajectory failed");
 	}
-	ROS_INFO("stateList length = %d", stateList.size());
+	ROS_INFO("stateList length = %lu", stateList.size());
 
-	ROS_INFO("RRT Start finished running");
+	ROS_INFO("RRT Start finished running  in %lf s", ((double)(finishTime - startTime)) / CLOCKS_PER_SEC);
 
 	ros::Time plan_time = ros::Time::now();
 
-	int stateIndex = 0;
+	// int stateIndex = 0;
 
 	for (list<double *>::iterator iter = stateList.begin(); iter != stateList.end(); iter++)
 	{
@@ -273,7 +279,9 @@ void RRTPlanner::saveExpToFile(std::ofstream& out)
 		// ROS_INFO("added vertex in plan");
 		double *stateRef = *iter;
 		double world_x, world_y;
-		system_->mapToWorld(stateRef[0], stateRef[1], world_x, world_y);
+		// system_->mapToWorld(stateRef[0], stateRef[1], world_x, world_y);
+		world_x = stateRef[0];
+		world_y = stateRef[1];
 		ROS_INFO("state: %lf,%lf\n", world_x, world_y);
 		out << "W " << world_x << " " << world_y << endl;
 
@@ -300,8 +308,12 @@ void RRTPlanner::saveExpToFile(std::ofstream& out)
 
 		state_t &stateCurr = vertexCurr.getState();
 		state_t &stateParent = vertexParent.getState();
-		system_->mapToWorld(stateCurr[0], stateCurr[1], wcx, wcy);
-		system_->mapToWorld(stateParent[0], stateParent[1], wpx, wpy);
+		// system_->mapToWorld(stateCurr[0], stateCurr[1], wcx, wcy);
+		// system_->mapToWorld(stateParent[0], stateParent[1], wpx, wpy);
+		wcx = stateCurr[0];
+		wcy = stateCurr[1];
+		wpx = stateParent[0];
+		wpy = stateParent[1];
 
 		
 

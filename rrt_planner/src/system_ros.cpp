@@ -1,6 +1,7 @@
 #include "system_ros.h"
 #include <cmath>
 #include <cstdlib>
+#include <costmap_2d/costmap_2d.h>
 
 #include <iostream>
 
@@ -8,6 +9,7 @@ using namespace std;
 using namespace Burger2D;
 
 #define DISCRETIZATION_STEP 0.01
+#define COSTMAP_OCCUPIED 128
 
 region2::region2()
 {
@@ -188,7 +190,13 @@ bool System::isReachingTarget(State2 &stateIn)
 
 bool System::IsInCollision(double *stateIn)
 {
-
+	unsigned int cx = (unsigned int) stateIn[0];
+	unsigned int cy = (unsigned int) stateIn[1];
+	int cost = costmap_->getCost(cx, cy);
+	if(cost >= costmap_2d::LETHAL_OBSTACLE)
+	{
+		return true;
+	}
 	// for (list<region2 *>::iterator iter = obstacles.begin(); iter != obstacles.end(); iter++)
 	// {
 

@@ -16,10 +16,10 @@
 
 #include "rrts_ros.h"
 
-#define COSTMAP_RESOLUTION 10
+#define COSTMAP_RESOLUTION
 #define TITLE_SIZE 200
 
-#define CENTRE(x, y) ((x) + (y)/2)
+#define CENTRE(x, y) ((x) + (y) / 2)
 
 typedef RRTstar::Planner<Burger2D::State2, Burger2D::Trajectory, Burger2D::System> planner_t;
 typedef RRTstar::Vertex<Burger2D::State2, Burger2D::Trajectory, Burger2D::System> vertex_t;
@@ -29,6 +29,7 @@ typedef std::pair<planner_t *, Burger2D::System *> experience_t;
 typedef Burger2D::State2 state_t;
 
 costmap_2d::Costmap2D configCostmap(string fileNameIn,
+									double resolution,
 									geometry_msgs::PoseStamped &poseStart,
 									geometry_msgs::PoseStamped &poseEnd,
 									string &expTitle);
@@ -57,8 +58,10 @@ int main(int argc, char **argv)
 	ros::NodeHandle n("~");
 	std::string expFileName;
 	std::string outputDir;
+	double res;
 	n.getParam("f", expFileName);
 	n.getParam("odir", outputDir);
+	n.getParam("res", res);
 	ROS_INFO_STREAM("got fileName " << expFileName);
 	ROS_INFO_STREAM("got odir " << outputDir);
 
@@ -84,12 +87,6 @@ int main(int argc, char **argv)
 	ros::Rate loop_rate(10);
 
 	/**
-   * A count of how many messages we have sent. This is used to create
-   * a unique string for each message.
-   */
-	int count = 0;
-
-	/**
    *  Create the CostMap *
    * costmap_2d::Costmap2D::Costmap2D 	( 	unsigned int  	cells_size_x,
 		unsigned int  	cells_size_y,
@@ -108,7 +105,7 @@ int main(int argc, char **argv)
 	geometry_msgs::PoseStamped end;
 	ROS_INFO("Created CostMap2D");
 	std::string expTitle;
-	costmap_2d::Costmap2D costmap = configCostmap(expFileName, start, end, expTitle);
+	costmap_2d::Costmap2D costmap = configCostmap(expFileName, res, start, end, expTitle);
 	ROS_INFO("Configured CostMap2D");
 
 	*(costmap_ros.getCostmap()) = costmap;
@@ -172,6 +169,7 @@ int writeRes(rrts_burger::RRTPlanner planner, std::string &outputDir, const char
 }
 
 costmap_2d::Costmap2D configCostmap(string fileNameIn,
+									double resolution,
 									geometry_msgs::PoseStamped &poseStart,
 									geometry_msgs::PoseStamped &poseEnd,
 									string &expTitleOut)
@@ -276,15 +274,15 @@ costmap_2d::Costmap2D configCostmap(string fileNameIn,
 	/**retranscription */
 	int ox = dim[2];
 	int oy = dim[3];
-	double offx = dim[0] / COSTMAP_RESOLUTION;
-	double offy = dim[1] / COSTMAP_RESOLUTION;
-	costmap_2d::Costmap2D costmap(ox, oy, COSTMAP_RESOLUTION, offx, offy);
-	ROS_INFO("created costmap w;h;RES;offx;offy : %u ; %u ; %d ; %lf ; %lf", ox, oy, COSTMAP_RESOLUTION, offx, offy);
-	poseStart.pose.position.x = start[0] / COSTMAP_RESOLUTION;
-	poseStart.pose.position.y = start[1] / COSTMAP_RESOLUTION;
+	double offx = dim[0] / resolution;
+	double offy = dim[1] / resolution;
+	costmap_2d::Costmap2D costmap(ox, oy, resolution, offx, offy);
+	ROS_INFO("created costmap w;h;RES;offx;offy : %u ; %u ; %lf ; %lf ; %lf", ox, oy, resolution, offx, offy);
+	poseStart.pose.position.x = start[0] * resolution;
+	poseStart.pose.position.y = start[1] * resolution;
 	ROS_INFO_STREAM("Start is " << poseStart.pose.position.x << ", " << poseStart.pose.position.y);
-	poseEnd.pose.position.x = CENTRE(goal[0], goal[2]) / COSTMAP_RESOLUTION;
-	poseEnd.pose.position.y = CENTRE(goal[1], goal[3]) / COSTMAP_RESOLUTION;
+	poseEnd.pose.position.x = CENTRE(goal[0], goal[2]) * resolution;
+	poseEnd.pose.position.y = CENTRE(goal[1], goal[3]) * resolution;
 	ROS_INFO_STREAM("Goal is " << poseEnd.pose.position.x << ", " << poseEnd.pose.position.y);
 
 	for (std::vector<surface_t>::iterator iter = obstacleList.begin(); iter != obstacleList.end(); iter++)
@@ -295,7 +293,8 @@ costmap_2d::Costmap2D configCostmap(string fileNameIn,
 			{
 				double cellx = (*iter)[0] + i;
 				double celly = (*iter)[1] + j;
-				ROS_INFO("filling cell %lf %lf as an obst", cellx, celly);
+				costmap.setCost((unsigned int)cellx, (unsigned int)celly, 255);
+				// ROS_INFO("filling cell %lf %lf as an obst", cellx, celly);
 			}
 		}
 	}
