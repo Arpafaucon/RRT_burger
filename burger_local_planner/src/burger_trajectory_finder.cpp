@@ -44,6 +44,7 @@ void BurgerTrajectoryFinder::initialize(Eigen::Vector3f initialPose)
 base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vector3f goal, Eigen::Vector3f pose, float deltaTime, bool isLastGoal, bool allowReverse)
 {
     base_local_planner::Trajectory traj;
+
     xPos_[1] = pose[0];
     yPos_[1] = pose[1];
     thetaPos_[1] = pose[2];
@@ -52,7 +53,7 @@ base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vecto
     {
         xGoal_ = goal[0];
         yGoal_ = goal[1];
-        ROS_INFO("trajectory finder got new goal");
+        ROS_INFO_DEBUG("Trajectory finder got new goal");
     }
 
     // thetaGoal_ = goal(2);
@@ -61,11 +62,13 @@ base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vecto
     if (isLastGoal)
     {
         linearSpeed_[1] = requestedSpeed;
-        ROS_INFO("Is last goal!");
+        ROS_INFO_THROTTLE(10, "Is last goal!");
     }
     else
     {
         // When it is not the true goal, no need to deccelerate when getting closer to the intermediary goal
+        // Knowing that requestedSpeed isn't the speed that will be applied directly, we leave it growing only here, and
+        // it is filtered after.
         if (requestedSpeed < lastRequestedSpeed_)
         {
             linearSpeed_[1] = lastRequestedSpeed_;
@@ -78,21 +81,6 @@ base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vecto
     }
 
     lastRequestedSpeed_ = requestedSpeed;
-
-    if (linearSpeed_[1] - linearSpeed_[0] >= SPEED_DELTA_MAX)
-    {
-        linearSpeed_[1] = linearSpeed_[0] + SPEED_DELTA_MAX;
-    }
-
-    if (linearSpeed_[1] > SPEED_MAX)
-    {
-        linearSpeed_[1] = SPEED_MAX;
-    }
-
-    if (linearSpeed_[1] < SPEED_MIN)
-    {
-        linearSpeed_[1] = SPEED_MIN;
-    }
 
     float thetaToGoalNow = atan((yGoal_ - yPos_[1]) / (xGoal_ - xPos_[1]));
     if ((xGoal_ - xPos_[1]) < 0)
@@ -140,6 +128,7 @@ base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vecto
         thetaDiffPrev += 2 * PI;
     }
 
+    // NOT WORKING AT THE MOMENT
     if (allowReverse)
     {
         if (abs(thetaDiffNow) > PI / 2.0)
@@ -165,11 +154,25 @@ base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vecto
         }
     }
 
+    // In order to prefer rotation over linear speed, we apply a filter on linear_speed based on the diff of orientation
+    // between the robot's attitude and its wanted attitude : thetaDiffNow
     linearSpeed_[1] /= (1.0 + 8 * abs(thetaDiffNow));
 
-    // ROS_INFO("pose = (%f, %f, %f), goal =(%f, %f)", xPos_[1], yPos_[1], thetaPos_[1], xGoal_, yGoal_);
+    // Here, we cap the acceleration of the robot discritly by ACC_MAX, then the speed by it's maximum
+    if (linearSpeed_[1] - linearSpeed_[0] >= ACC_MAX)
+    {
+        linearSpeed_[1] = linearSpeed_[0] + ACC_MAX;
+    }
 
-    // ROS_INFO("thetaToGoalNow = %f, thetaNow = %f", thetaToGoalNow, thetaPos_[1]);
+    if (linearSpeed_[1] > SPEED_MAX)
+    {
+        linearSpeed_[1] = SPEED_MAX;
+    }
+
+    if (linearSpeed_[1] < SPEED_MIN)
+    {
+        linearSpeed_[1] = SPEED_MIN;
+    }
 
     omegap_[2] = Kp * thetaDiffNow;
     omegai_[2] = omegai_[0] + Ki * (deltaTime / 2.0) * (thetaDiffNow + thetaDiffPrev);

@@ -29,11 +29,11 @@
 namespace burger_local_planner
 {
 
-const float L = 0.160;              ///< distance between middle of wheels
-const float SPEED_DELTA_MAX = 0.01; ///< Max speed variation between two rounds (only when increasing)
-const float SPEED_MAX = 0.18;       ///< Max linear speed (m/s)
-const float SPEED_MIN = 0.05;       ///< Min linear speed
-const float OMEGA_MAX = 2.840;      ///< Mas angular velocit (rad/s)
+const float L = 0.160;         ///< distance between middle of wheels
+const float ACC_MAX = 0.01;    ///< Max speed variation between two rounds (only when increasing)
+const float SPEED_MAX = 0.18;  ///< Max linear speed (m/s)
+const float SPEED_MIN = 0.05;  ///< Min linear speed
+const float OMEGA_MAX = 2.840; ///< Mas angular velocit (rad/s)
 const float PI = 3.1415926535;
 const float WHEEL_MAX_SPEED = SPEED_MAX * 0.9;
 const float SPEED_FACTOR = 0.05;
