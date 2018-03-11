@@ -33,7 +33,8 @@ rrtstar: $(OBJ)
 
 cmd: 
 	cd ~/catkin_ws &&\
-	catkin_make --pkg rrt_planner -DCMAKE_BUILD_TYPE=Debug &&\
+	catkin_make --pkg rrt_planner  &&\
+	#catkin_make --pkg rrt_planner -DCMAKE_BUILD_TYPE=Debug &&\
 	cd -
 
 rosTest: 
