@@ -235,13 +235,6 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	system_ = burgerSystem;
 	ROS_INFO("BurgerRRT is making a plan");
 
-	// char hostname[256];
-	// gethostname(hostname, sizeof(hostname));
-	// ROS_INFO("PID %d on %s ready for attach\n", getpid(), hostname);
-	// fflush(stdout);
-	// while (0 == i)
-	//     sleep(5);
-
 	wx = goal.pose.position.x;
 	wy = goal.pose.position.y;
 	if (!costmap_->worldToMap(wx, wy, goal_x_i, goal_y_i))
@@ -364,13 +357,6 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 		plan.push_back(pose);
 		// bool coll = system.IsInCollision(stateRef);
 
-		//small verif to be sure
-		// cout << "reaching" << system. << endl;
-
-		// resultFile << "W " << stateRef[0] << " " << stateRef[1] << " " << (coll ? "!" : "") << endl;
-
-		// delete[] stateRef;
-		// stateIndex++;
 	}
 
 	ROS_INFO_STREAM("RRT Star finished filling plan (entries: " << plan.size() << " )");
@@ -412,16 +398,6 @@ void RRTPlanner::saveExpToFile(std::ofstream &out)
 		world_y = stateRef[1];
 		ROS_INFO_THROTTLE(1, "state: %lf,%lf\n", world_x, world_y);
 		out << "W " << world_x << " " << world_y << endl;
-
-		// bool coll = system.IsInCollision(stateRef);
-
-		//small verif to be sure
-		// cout << "reaching" << system. << endl;
-
-		// resultFile << "W " << stateRef[0] << " " << stateRef[1] << " " << (coll ? "!" : "") << endl;
-
-		// delete[] stateRef;
-		// stateIndex++;
 	}
 	ROS_INFO("filling tree : %d entries", planner_->numVertices);
 	for (std::list<vertex_t *>::iterator iter = planner_->listVertices.begin(); iter != planner_->listVertices.end(); iter++)
@@ -436,8 +412,6 @@ void RRTPlanner::saveExpToFile(std::ofstream &out)
 
 		state_t &stateCurr = vertexCurr.getState();
 		state_t &stateParent = vertexParent.getState();
-		// system_->mapToWorld(stateCurr[0], stateCurr[1], wcx, wcy);
-		// system_->mapToWorld(stateParent[0], stateParent[1], wpx, wpy);
 		wcx = stateCurr[0];
 		wcy = stateCurr[1];
 		wpx = stateParent[0];
