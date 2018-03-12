@@ -10,7 +10,7 @@
 #include <costmap_2d/costmap_2d.h>
 
 #define DISCRETIZATION_STEP 0.01
-
+#define ROBOT_RADIUS 0.05
 namespace Burger2D
 {
 
@@ -196,7 +196,7 @@ public:
      */
 class System
 {
-
+private:
   static const int numDimensions_ = 2;
   // costmap2d::Costmap2DROS* costmap_ros_;
   costmap_2d::Costmap2D *costmap_;
@@ -211,7 +211,14 @@ class System
   double convert_offset_ = 0.5;
 
 public:
+  /**
+  * Checks if the given state is in conflict with an obstacle of the costmap
+  */
   bool IsInCollision(double *stateIn);
+  /**
+   * Checks if the given region intersects an obstacle $
+   */
+  bool IsInCollision(region2 region);
 
   /*!
          * \brief The goal region

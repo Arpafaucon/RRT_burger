@@ -190,13 +190,20 @@ bool System::isReachingTarget(State2 &stateIn)
 
 bool System::IsInCollision(double *stateIn)
 {
-	unsigned int cx = (unsigned int) stateIn[0];
-	unsigned int cy = (unsigned int) stateIn[1];
+	unsigned int cx = (unsigned int)stateIn[0];
+	unsigned int cy = (unsigned int)stateIn[1];
 	int cost = costmap_->getCost(cx, cy);
-	if(cost >= costmap_2d::LETHAL_OBSTACLE)
+	if (cost >= costmap_2d::LETHAL_OBSTACLE)
 	{
 		return true;
 	}
+
+	region2 footprint();
+	footprint.center[0] = stateIn[0];
+	footprint.center[1] = stateIn[1];
+	footprint.size[0] = ROBOT_RADIUS;
+	footprint.size[1] = ROBOT_RADIUS;
+	return IsInCollision(footprint);
 	// for (list<region2 *>::iterator iter = obstacles.begin(); iter != obstacles.end(); iter++)
 	// {
 
@@ -216,6 +223,22 @@ bool System::IsInCollision(double *stateIn)
 	// 	}
 	// }
 
+	return false;
+}
+
+bool System::IsInCollision(region2 region)
+{
+	for (unsigned int cx = region.center[0] - region.size[0]; cx <= region.center[0] + region.size[0]; cx++)
+	{
+		for (unsigned int cy = region.center[1] - region.size[1]; cy <= region.center[1] + region.size[1]; cy++)
+		{
+			int cost = costmap_->getCost(cx, cy);
+			if (cost >= costmap_2d::LETHAL_OBSTACLE)
+			{
+				return true;
+			}
+		}
+	}
 	return false;
 }
 

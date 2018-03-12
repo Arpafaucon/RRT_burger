@@ -43,19 +43,20 @@ class RRTPlanner : public nav_core::BaseGlobalPlanner
 	bool makePlan(const geometry_msgs::PoseStamped &start,
 				  const geometry_msgs::PoseStamped &goal,
 				  std::vector<geometry_msgs::PoseStamped> &plan);
-	void saveExpToFile(std::ofstream& out);
-	bool publishStatesRviz(std::list<double *> stateList);
+	void saveExpToFile(std::ofstream &out);
+	bool publishStatesRviz(std::list<double *> &stateList, std::list<vertex_t *> *verticesList);
 
   private:
 	costmap_2d::Costmap2D *costmap_;
 	string frame_id_;
 	bool initialized_;
-	Burger2D::System* system_ = NULL;
-	planner_t* planner_ = NULL;
+	Burger2D::System *system_ = NULL;
+	planner_t *planner_ = NULL;
 
 	// visualisation part
 	// ros::NodeHandle* nodeHandle_;
 	ros::Publisher markerPub_;
+	ros::Publisher treeMarkerPub_;
 	unsigned int msgIndex_ = 0;
 
 	void clearRobotCell(const unsigned int mx, const unsigned int my);

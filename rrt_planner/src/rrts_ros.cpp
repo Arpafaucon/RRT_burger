@@ -3,6 +3,10 @@
 #include "rrt_planner/rrts_ros.h"
 #include "rrt_planner/system_ros.h"
 #include <visualization_msgs/Marker.h>
+#include <std_msgs/ColorRGBA.h>
+#include <math.h>
+
+#define PI 3.14159265
 
 //register this planner as a BaseGlobalPlanner plugin
 PLUGINLIB_EXPORT_CLASS(rrts_burger::RRTPlanner, nav_core::BaseGlobalPlanner)
@@ -40,7 +44,8 @@ void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS *costmap_
 
 		ros::NodeHandle nodeHandle;
 		// ros::Publisher markerPubInsta = nodeHandle.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1, true);
-		markerPub_ = nodeHandle.advertise<visualization_msgs::Marker>("visualization_marker", 1, true);
+		markerPub_ = nodeHandle.advertise<visualization_msgs::Marker>("rrts_ros_path", 1, true);
+		treeMarkerPub_ = nodeHandle.advertise<visualization_msgs::Marker>("rrts_ros_tree", 1, true);
 
 		initialized_ = true;
 		ROS_INFO("End  Burger RRT Initialization");
@@ -51,7 +56,7 @@ void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS *costmap_
 	}
 }
 
-bool RRTPlanner::publishStatesRviz(list<double *> stateList)
+bool RRTPlanner::publishStatesRviz(list<double *> &stateList, list<vertex_t *> *verticesList)
 {
 	if (!initialized_ || system_ == NULL)
 	{
@@ -59,7 +64,6 @@ bool RRTPlanner::publishStatesRviz(list<double *> stateList)
 		return false;
 	}
 	visualization_msgs::Marker marker;
-	int index = 0;
 	marker.header.frame_id = frame_id_;
 	marker.header.stamp = ros::Time::now();
 
@@ -72,35 +76,46 @@ bool RRTPlanner::publishStatesRviz(list<double *> stateList)
 
 	// Set the marker action.  Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
 	marker.action = visualization_msgs::Marker::ADD;
-		// Set the scale of the marker -- 1x1x1 here means 1m on a side
-		marker.scale.x = 1.0;
-		marker.scale.y = 1.0;
-		marker.scale.z = 0.1;
-		marker.pose.orientation.x = 0.0;
-		marker.pose.orientation.y = 0.0;
-		marker.pose.orientation.z = 0.0;
-		marker.pose.orientation.w = 1.0;
+	// Set the scale of the marker -- 1x1x1 here means 1m on a side
+	marker.scale.x = 0.01;
+	marker.scale.y = 1.0;
+	marker.scale.z = 0.1;
+	marker.pose.orientation.x = 0.0;
+	marker.pose.orientation.y = 0.0;
+	marker.pose.orientation.z = 0.0;
+	marker.pose.orientation.w = 1.0;
 
+	marker.lifetime = ros::Duration();
 
-		marker.lifetime = ros::Duration(3000);
-
-		// Set the color -- be sure to set alpha to something non-zero!
-		marker.color.r = 0.0f;
-		marker.color.g = 1.0f;
-		marker.color.b = 0.0f;
-		marker.color.a = 1.0;
+	// Set the color -- be sure to set alpha to something non-zero!
+	marker.color.r = 0.0f;
+	marker.color.g = 1.0f;
+	marker.color.b = 0.0f;
+	marker.color.a = 0.8;
+	int count = 0;
 	for (list<double *>::iterator iter = stateList.begin(); iter != stateList.end(); iter++)
 	{
-		visualization_msgs::Marker marker;
 
 		// Set the pose of the marker.  This is a full 6DOF pose relative to the frame/time specified in the header
 		double *stateRef = *iter;
 		double world_x, world_y;
 		system_->mapToWorld(stateRef[0], stateRef[1], world_x, world_y);
-		geometry_msgs::Point point;
+		geometry_msgs::Point point, pur, pul, pbr, pbl;
+		double sql = 0.1;
 		point.x = world_x;
 		point.y = world_y;
-		point.z = 0;
+		pur.x = world_x + sql;
+		pur.y = world_y + +sql;
+		pul.x = world_x - sql;
+		pul.y = world_y + +sql;
+		pbr.x = world_x + sql;
+		pbr.y = world_y - +sql;
+		pbl.x = world_x - sql;
+		pbl.y = world_y - +sql;
+
+		std_msgs::ColorRGBA color;
+		color.r = 0.6 + 0.3 * cos(PI * count / 5);
+		color.a = 0.9;
 
 		// Publish the marker
 		// while (markerPub_->getNumSubscribers() < 1)
@@ -112,11 +127,84 @@ bool RRTPlanner::publishStatesRviz(list<double *> stateList)
 		// 	ROS_WARN_ONCE("Please create a subscriber to the marker");
 		// 	sleep(1);
 		// }
-		marker.points.push_back(point);
+		marker.points.push_back(pul);
+		marker.points.push_back(pur);
+		marker.points.push_back(pur);
+		marker.points.push_back(pbr);
+		marker.points.push_back(pbr);
+		marker.points.push_back(pbl);
+		marker.points.push_back(pbl);
+		marker.points.push_back(pul);
+
+		marker.colors.push_back(color);
+		marker.colors.push_back(color);
+		marker.colors.push_back(color);
+		marker.colors.push_back(color);
+		marker.colors.push_back(color);
+		marker.colors.push_back(color);
+		marker.colors.push_back(color);
+		marker.colors.push_back(color);
+		count++;
 	}
-	ROS_INFO("attempt to publish message");
+	ROS_INFO("attempt to publish message with %d markers %lu", count, marker.points.size());
 	markerPub_.publish(marker);
 	ROS_INFO("published shape");
+
+	if (verticesList != NULL)
+	{
+		visualization_msgs::Marker markerTree;
+		markerTree.header.frame_id = frame_id_;
+		markerTree.header.stamp = ros::Time::now();
+
+		// Set the namespace and id for this marker.  This serves to create a unique ID
+		// Any marker sent with the same namespace and id will overwrite the old one
+		markerTree.ns = "tree_wp_list";
+		markerTree.id = 0;
+		// Set the marker type.  Initially this is CUBE, and cycles between that and SPHERE, ARROW, and CYLINDER
+		markerTree.type = visualization_msgs::Marker::LINE_LIST;
+
+		// Set the marker action.  Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
+		markerTree.action = visualization_msgs::Marker::ADD;
+		// Set the scale of the marker -- 1x1x1 here means 1m on a side
+		markerTree.scale.x = 0.005;
+		// markerTree.pose.orientation.x = 0.0;
+		// markerTree.pose.orientation.y = 0.0;
+		// markerTree.pose.orientation.z = 0.0;
+		// markerTree.pose.orientation.w = 1.0;
+
+		markerTree.lifetime = ros::Duration();
+
+		// Set the color -- be sure to set alpha to something non-zero!
+		markerTree.color.r = 0.0f;
+		markerTree.color.g = 0.8f;
+		markerTree.color.b = 0.8f;
+		markerTree.color.a = 0.6;
+		for (list<vertex_t *>::iterator iter = verticesList->begin(); iter != verticesList->end(); iter++)
+		{
+			vertex_t &vertexCurr = **iter;
+			vertex_t &vertexParent = vertexCurr.getParent();
+
+			if (&vertexParent == NULL)
+				continue;
+
+			state_t &stateCurr = vertexCurr.getState();
+			state_t &stateParent = vertexParent.getState();
+
+			double cx, cy, px, py;
+			system_->mapToWorld(stateCurr[0], stateCurr[1], cx, cy);
+			system_->mapToWorld(stateParent[0], stateParent[1], px, py);
+
+			geometry_msgs::Point ppar, pcur; 
+			ppar.x = px;
+			ppar.y= py;
+			pcur.x = px;
+			pcur.y = py;
+			markerTree.points.push_back(ppar);
+			markerTree.points.push_back(pcur);
+		}
+		treeMarkerPub_.publish(markerTree);
+		ROS_INFO("published tree (%lu entries)", verticesList->size());
+	}
 	return true;
 }
 
@@ -236,7 +324,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 		int error = rrts->iteration();
 		if (error < 0)
 		{
-			ROS_WARN("rrts.iteration failed error %d", error);
+			ROS_WARN_THROTTLE(1, "rrts.iteration failed error %d", error);
 		}
 		// ROS_INFO("number of vertice : %d", rrts.numVertices);
 		ROS_INFO_THROTTLE(2, "burger iterating");
@@ -259,7 +347,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 
 	for (list<double *>::iterator iter = stateList.begin(); iter != stateList.end(); iter++)
 	{
-		ROS_INFO("added vertex in plan");
+		ROS_INFO_THROTTLE(1, "added vertex in plan");
 		double *stateRef = *iter;
 		double world_x, world_y;
 		burgerSystem->mapToWorld(stateRef[0], stateRef[1], world_x, world_y);
@@ -287,52 +375,9 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 
 	ROS_INFO_STREAM("RRT Star finished filling plan (entries: " << plan.size() << " )");
 
-	// cout << "Time : " << (static_cast<double>(finishTime - startTime)) / CLOCKS_PER_SEC << endl;
-
-	// plan.push_back(start);
-	// Pose startPose = myPoseStampedMsgToTF(start);
-	// Pose goalPose = myPoseStampedMsgToTF(goal);
-
-	// Transform difference = startPose.inverseTimes(goalPose);
-
-	// float diffX = goal.pose.position.x - start.pose.position.x;
-	// float diffY = goal.pose.position.y - start.pose.position.y;
-
-	// tf::Quaternion quat = difference.getRotation();
-
-	// int numberOfPoint = 5;
-
-	// for (int i = 0; i < numberOfPoint; i++)
-	// {
-	// 	//ROS_INFO("Whoholo");
-	// 	geometry_msgs::PoseStamped inter_goal = goal;
-
-	// 	inter_goal.pose.orientation = tf::createQuaternionMsgFromYaw(quat.getY());
-
-	// 	inter_goal.pose.position.x = start.pose.position.x + (i * (float)(1.0 / (float)numberOfPoint)) * diffX;
-	// 	//inter_goal.pose.position.y = start.pose.position.y + (i * (float)(1.0 / numberOfPoint)) * diffY;
-	// 	inter_goal.pose.position.y = start.pose.position.y;
-	// 	plan.push_back(inter_goal);
-	// }
-
-	// geometry_msgs::PoseStamped Xgoal = plan.back();
-
-	// for (int i = 0; i < numberOfPoint; i++)
-	// {
-	// 	//ROS_INFO("Whoholo");
-	// 	geometry_msgs::PoseStamped inter_goal = goal;
-
-	// 	inter_goal.pose.orientation = tf::createQuaternionMsgFromYaw(quat.getY());
-
-	// 	//inter_goal.pose.position.x = start.pose.position.x + (i * (float)(1.0 / numberOfPoint)) * diffX;
-	// 	inter_goal.pose.position.y = start.pose.position.y + (i * (float)(1.0 / (float)numberOfPoint)) * diffY;
-	// 	inter_goal.pose.position.x = Xgoal.pose.position.x;
-	// 	plan.push_back(inter_goal);
-	// }
-
-	// plan.push_back(goal);
+	
 	ROS_INFO("Publishing to rviz...");
-	publishStatesRviz(stateList);
+	publishStatesRviz(stateList, &(rrts->listVertices));
 
 	ROS_INFO("Plan finished");
 	return true;
@@ -365,7 +410,7 @@ void RRTPlanner::saveExpToFile(std::ofstream &out)
 		// system_->mapToWorld(stateRef[0], stateRef[1], world_x, world_y);
 		world_x = stateRef[0];
 		world_y = stateRef[1];
-		ROS_INFO("state: %lf,%lf\n", world_x, world_y);
+		ROS_INFO_THROTTLE(1, "state: %lf,%lf\n", world_x, world_y);
 		out << "W " << world_x << " " << world_y << endl;
 
 		// bool coll = system.IsInCollision(stateRef);
