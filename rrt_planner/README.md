@@ -1,8 +1,8 @@
 # RRT-Star project for Turtlebot & ROS
 
-## Projects
+NOTE : code documentation can be build with `make doc`
 
-### General Structure
+## General Structure
 
 The structure of programs using the RRT capabilities can be separated in 3 categories
 
@@ -21,11 +21,11 @@ The structure of programs using the RRT capabilities can be separated in 3 categ
     - `rrts_ros.h` & `rrts_ros.cpp` define a ROS `NavCore::BaseGlobalPlanner` plugin
     - `rest_ros.cpp` is a ROS node testing the plugin.
 
-### Standalone
+## Standalone
 
 This executable demonstrates the use of the librairy without ROS. It was developped first to evaluate the potential of the RRTS algorithms
 
-#### How to run it
+### How to run it
 
 The program reads an input `.exp` file and writes as output a `.sol` file.
 It can be launched like
@@ -34,7 +34,7 @@ It can be launched like
 ./rrtstar file.exp
 ```
 
-##### Input
+#### Input
 
 The standalone takes its instructions from `exp` files. These follows a precise template, defined in the templates files of the exp folder, and copied below
 
@@ -59,7 +59,7 @@ O 15 12 2 1
 -- end example --
 ```
 
-##### Ouput
+#### Ouput
 
 The output file is named following the title given in the experience file. The template of the resulting solution file is as follows :
 
@@ -80,39 +80,88 @@ T x1 y1 x2 y2			//char float*4	: segment of the RRT tree			//MULTIPLE
 -- end template --
 ```
 
-#### Displaying the results
+### Displaying the results
 
 There is a basic python tool to display the results.
 
-##### Prequisites
+#### Prequisites
 
 The tool obviously needs python installed, but any version after 2.7 should be fine.
 Needed modules : 
 - Matplotlib
 - Numpy
 
-##### Usage
+#### Usage
 
 From the root folder (..../rrt_planner/), launch the viz tool by 
 ```shell
 python viz/viz.py exp/expTitle.sol
 ```
 
-##### Settings
+#### Settings
 
 In `viz/viz.py`, it is possible to enable/disable the display of the RRT tree.
 
 
-### ROS Plugin
+## ROS Plugin
 
 Th main objective of the project was **to develop a motion planning plugin for ROS** using a RRTS (then BoxRRT) algorithm. 
 
+### Internals
+
 The plugin implements the `NavCore::BaseGlobalPlanner` plugin interface.
 
-#### Simulation & Testing
-
-##### ROS rrt_planner_tester node
+### Testing :  rrt_planner_tester node
 
 The `test_ros` files define a ROS node that creates and fills a ROS `costmap_2d::Costmap2D` object, using an `.exp` configuration files (mentionned above). It then calls the global planner interface, and writes the resulting plan in a file following the `.sol` conventions.
 
 **Those output files are compatible with the `viz.py` visualization tool.**
+
+#### Usage
+
+This a standard ros node that can be launched with rosrun.
+
+However the Costmap2DRos wrapper requires some tf2 transformation to be defined, the best is therefore to use the provided `test.launch` that runs a minimal working example.
+
+```
+roslaunch ./test.launch
+```
+
+Neeed **tf** transformations : 
+- world <-> map
+- map <-> base_link
+
+#### Parameters
+
+The node accepts the following parameters : 
+
+- `f` : (string) The experience file to be runned on
+- `odir` : (string) The folder where to write the output `.sol` files
+- `res` : (double) The costmap resolution (size of a cell, in meters)
+
+### Simulation with Gazebo
+
+It is possible to setup a virtual experiment with gazebo to evaluate the planner in almost-real conditions. The computer simulates a fake robot (its **tf** tree, its laser scans, etc.), with which the planner plugin can be tested in its actual calling conditions (as a plugin, ie. a dynamically-bound library called by the `move_base` node).
+
+#### Prerequisites
+
+The simulation needs a complete PC setup as described in the *Turtlebot3* installation manual. 
+You must therefore check that the following package stacks are installed and built: 
+- turtlebot3
+- turtlebot3_msgs
+- turtlebot3_simulations
+
+#### Usage
+
+The needed `launch` files are in the `simulation` folder. 
+
+```
+roslaunch simulation/tworld.launch
+roslaunch simulation/navigation.launch
+```
+
+### Visualization 
+
+In addition to returning the path to the caller, the plugin publish rviz `Markers` to present its results. Those can be found on the follwing topics : 
+- `rrts_ros_path` gives additionnal visual informations on the path found. The boxes define a *safe zone* around each waypoint.
+- `rrts_ros_tree` gives additionnal visual informations on the RRT tree. IT should display the final tree, but some unknown issues still have to be solved. 
