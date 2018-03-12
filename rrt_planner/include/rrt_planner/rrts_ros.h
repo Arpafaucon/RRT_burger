@@ -33,32 +33,100 @@ typedef Burger2D::State2 state_t;
 namespace rrts_burger
 {
 
+/** 
+ * \brief RRTS GlobalPlanner implementation
+ */
 class RRTPlanner : public nav_core::BaseGlobalPlanner
 {
   public:
+	/**
+	 * \brief constructor
+	 */
 	RRTPlanner();
 
-	/** overridden classes from interface nav_core::BaseGlobalPlanner **/
+	/**
+	 * \brief sets up the planner
+	 * 
+	 * GlobalPlanner interface.
+	 * Builds necessary objects, and register the two marker topics
+	 * 
+	 * \param name name of the planner
+	 * \param costmap_ros costmap to use
+	 */
 	void initialize(std::string name, costmap_2d::Costmap2DROS *costmap_ros);
+	/**
+	 * \brief Computes a path
+	 * 
+	 * Calls the RRTS engine
+	 * 
+	 * \param start starting point
+	 * \param goal destination point
+	 * \param plan list of waypoints (to fill)
+	 */
 	bool makePlan(const geometry_msgs::PoseStamped &start,
 				  const geometry_msgs::PoseStamped &goal,
 				  std::vector<geometry_msgs::PoseStamped> &plan);
+	
+	/**
+	 * \brief writes waypoints and tree to stream
+	 * 
+	 * Used to write .sol files
+	 * 
+	 * \param out the pre-opened and filled output stream to the file
+	 */
 	void saveExpToFile(std::ofstream &out);
+
+	/**
+	 * \brief publish waypoints and RRTS tree as markers for RVIZ
+	 * 
+	 * \param stateList list of waypoints as returned by the planner
+	 * \param verticesList list of vertices. If NULL, no tree is published
+	 */
 	bool publishStatesRviz(std::list<double *> &stateList, std::list<vertex_t *> *verticesList);
 
   private:
+	/**
+	 * \brief internal costmap
+	 */
 	costmap_2d::Costmap2D *costmap_;
+	/**
+	 * \brief the world tf frame
+	 */
 	string frame_id_;
+	/**
+	 * \brief internal state of the planner
+	 */
 	bool initialized_;
+	/**
+	 * \brief the last system used
+	 * 
+	 * Helpful in peripheral functions (publishStateRviz & saveExpToFile)
+	 */
 	Burger2D::System *system_ = NULL;
+	/**
+	 * \brief the last planner used
+	 * 
+	 * Helpful in peripheral functions (publishStateRviz & saveExpToFile)
+	 */
+	
 	planner_t *planner_ = NULL;
 
-	// visualisation part
-	// ros::NodeHandle* nodeHandle_;
+	/**
+	 * \brief path publisher (rviz markers)
+	 */
 	ros::Publisher markerPub_;
+	/**
+	 * \brief tree pusblisher (rviz markers)
+	 */
 	ros::Publisher treeMarkerPub_;
+	/**
+	 * \brief unused
+	 * Could be useful to ensure uniqueness of msgs
+	 */
 	unsigned int msgIndex_ = 0;
-
+	/**
+	 * \brief clears a cell of the costmap
+	 */
 	void clearRobotCell(const unsigned int mx, const unsigned int my);
 };
 };

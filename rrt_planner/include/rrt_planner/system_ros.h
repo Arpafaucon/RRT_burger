@@ -14,102 +14,86 @@
 namespace Burger2D
 {
 
-/*!
-     * \brief region class
-     *
-     * More elaborate description
-     */
+/**
+ * \brief Region class
+ *
+ * A region is a set of states. 
+ * In 2D, it is a surface, and is implemented as a couple of lists (center, size)
+ */
 class region2
 {
-
+  /**
+  * The dimension space is fixed
+  */
   static const int numDimensions = 2;
 
 public:
-  /*!
-         * \brief Cartesian coordinates of the center of the region
-         *
-         * More elaborate description
-         */
+  /**
+   * \brief Cartesian coordinates of the center of the region
+   */
   double center[numDimensions] = {0};
 
-  /*!
-         * \brief Size of the region in cartesian coordinates
-         *
-         * More elaborate description
-         */
+  /**
+   * \brief Size of the region in cartesian coordinates
+   */
   double size[numDimensions] = {0};
 
   /*!
-         * \brief region constructor
-         *
-         * More elaborate description
-         */
+  * \brief region constructor
+  */
   region2();
 
+  /**
+   * \brief box constructor
+   */ 
   region2(double xleft, double xright, double ybottom, double yup);
 
   /*!
-         * \brief region destructor
-         *
-         * More elaborate description
-         */
+  * \brief region destructor
+  */
   ~region2();
-
-  /*!
-         * \brief Sets the dimensionality of the region
-         *
-         * More elaborate description
-         *
-         * \param numDimensionsIn New number of dimensions.
-         *
-         */
-  //   int setNumDimensions(int numDimensionsIn);
 };
 
 /*!
-     * \brief State2 Class.
-     *
-     * A more elaborate description of the State2 class
-     */
+* \brief State2 Class.
+*
+* Defines a possible state of the robot
+*/
 class State2
 {
 private:
+  /**
+   * \brief fixed to 2D
+   */
   static const int numDimensions = 2;
+  /**
+   * \brief Cartesian coordinates
+   */
   double x[numDimensions] = {0};
 
 public:
   /*!
          * \brief State constructor
-         *
-         * More elaborate description
          */
   State2();
 
   /*!
          * \brief State desctructor
-         *
-         * More elaborate description
          */
   ~State2();
 
   /*!
          * \brief State copy constructor
-         *
-         * More elaborate description
          */
   State2(const State2 &stateIn);
 
   /*!
          * \brief State assignment operator
-         *
-         * More elaborate description
          */
   State2 &operator=(const State2 &stateIn);
 
   /*!
          * \brief State bracket operator
-         *
-         * More elaborate description
          */
   double &operator[](const int i) { return x[i]; }
 
@@ -120,7 +104,8 @@ public:
 /*!
      * \brief Trajectory Class.
      *
-     * A more elaborate description of the State class
+     * A Trajectory is a path between two states.
+     * The path is a right line.
      */
 class Trajectory
 {
@@ -131,22 +116,16 @@ class Trajectory
 public:
   /*!
          * \brief Trajectory constructor
-         *
-         * More elaborate description
          */
   Trajectory();
 
   /*!
          * \brief Trajectory destructor
-         *
-         * More elaborate description
          */
   ~Trajectory();
 
   /*!
          * \brief Trajectory copy constructor
-         *
-         * More elaborate description
          *
          * \param trajectoryIn The trajectory to be copied.
          *
@@ -156,8 +135,6 @@ public:
   /*!
          * \brief Trajectory assignment constructor
          *
-         * More elaborate description
-         *
          * \param trajectoryIn the trajectory to be copied.
          *
          */
@@ -165,22 +142,16 @@ public:
 
   /*!
          * \brief Returns a reference to the end state of this trajectory.
-         *
-         * More elaborate description
          */
   State2 &getEndState() { return *endState; }
 
   /*!
          * \brief Returns a reference to the end state of this trajectory (constant).
-         *
-         * More elaborate description
          */
   State2 &getEndState() const { return *endState; }
 
   /*!
          * \brief Returns the cost of this trajectory.
-         *
-         * More elaborate description
          */
   double evaluateCost();
 
@@ -197,25 +168,40 @@ public:
 class System
 {
 private:
+/**
+ * \brief fixed to 2D
+ */
   static const int numDimensions_ = 2;
-  // costmap2d::Costmap2DROS* costmap_ros_;
+  /**
+   * \brief the internal costmap
+   */
   costmap_2d::Costmap2D *costmap_;
+  /**
+   * \brief The start point
+   */
   State2 rootState_;
+  /**
+   * \brief status of the system
+   */
   bool initalized_;
 
   /**
-   * used in mapto world and world to map: 
-   * if 0.0 -> world cooridnates are the bottom left corner
+   * Used in 'mapToworld' & 'worldToMap': 
+   * if 0.0 -> world coordinates are the bottom left corner
    * if 0.5 -> center of the cell
    */
   double convert_offset_ = 0.5;
 
 public:
   /**
+  * \brief collision check
+  * 
   * Checks if the given state is in conflict with an obstacle of the costmap
   */
   bool IsInCollision(double *stateIn);
   /**
+   * \brief collision check
+   * 
    * Checks if the given region intersects an obstacle $
    */
   bool IsInCollision(region2 region);
@@ -223,35 +209,25 @@ public:
   /*!
          * \brief The goal region
          *
-         * More elaborate description
          */
   region2 regionGoal_;
 
   /*!
          * \brief The operating region
          *
-         * More elaborate description
          */
   region2 regionOperating_;
 
-  /*!
-         * \brief The list of all obstacles
-         *
-         * More elaborate description
-         */
-  // std::list<region2 *> obstacles;
 
   /*!
          * \brief System constructor
          *
-         * More elaborate description
          */
   System(costmap_2d::Costmap2D *costmap);
 
   /*!
          * \brief System destructor
          *
-         * More elaborate description
          */
   ~System();
 
@@ -259,25 +235,44 @@ public:
 
   /*!
          * \brief Returns the dimensionality of the Euclidean space.
+         * 
+         * Always 2 here
          *
-         * A more elaborate description.
          */
   int getNumDimensions() { return numDimensions_; }
 
+  /**
+   * \brief Coordinates converter
+   * 
+   * From map (=grid) to world coordinates
+   * 
+   * \param mx map coordinate x
+   * \param my map coordinate y
+   * \param wx world coordinate x
+   * \param wy world coordinate y
+   */
   void mapToWorld(double mx, double my, double &wx, double &wy);
+  /**
+   * \brief Coordinates converter
+   * 
+   * From world to map(=grid) coordinates
+   * 
+   * \param wx world coordinate x
+   * \param wy world coordinate y
+   * \param mx map coordinate x
+   * \param my map coordinate y
+   */
   bool worldToMap(double wx, double wy, double &mx, double &my);
 
   /*!
          * \brief Returns a reference to the root state.
-         *t
-         * A more elaborate description.
+         *
          */
   State2 &getRootState() { return rootState_; }
 
   /*!
          * \brief Returns the statekey for the given state.
          *
-         * A more elaborate description.
          *
          * \param stateIn the given state
          * \param stateKey the key to the state. An array of dimension getNumDimensions()
@@ -288,14 +283,11 @@ public:
   /*!
          * \brief Returns true if the given state reaches the target.
          *
-         * A more elaborate description.
          */
   bool isReachingTarget(State2 &stateIn);
 
   /*!
          * \brief Returns a sample state.
-         *
-         * A more elaborate description.
          *
          * \param randomStateOut randomState
          *
@@ -306,7 +298,6 @@ public:
          * \brief Returns a the cost of the trajectory that connects stateFromIn and
          *        stateTowardsIn. The trajectory is also returned in trajectoryOut.
          *
-         * A more elaborate description.
          * 
          * \param stateFromIn Initial state
          * \param stateTowardsIn Final state
@@ -322,7 +313,6 @@ public:
   /*!
          * \brief Returns the cost of the trajectory that connects stateFromIn and StateTowardsIn.
          *
-         * A more elaborate description.
          *
          * \param stateFromIn Initial state
          * \param stateTowardsIn Final state
@@ -335,7 +325,6 @@ public:
   /*!
          * \brief Returns a lower bound on the cost to go starting from stateIn
          *
-         * A more elaborate description.
          *
          * \param stateIn Starting state
          *
@@ -345,7 +334,6 @@ public:
   /*!
          * \brief Returns the trajectory as a list of double arrays, each with dimension getNumDimensions.
          *
-         * A more elaborate description.
          *
          * \param stateFromIn Initial state
          * \param stateToIn Final state

@@ -17,6 +17,9 @@ using std::string;
 namespace rrt_planner
 {
 
+/**
+ * \brief Reference Carrot Planner
+ */
 class RRTPlanner : public nav_core::BaseGlobalPlanner
 {
   public:
