@@ -164,7 +164,7 @@ class Solution:
 		fig, ax = self.exp.display(show=False)
 		if(displayPath and len(self.path) > 0):
 			pathX, pathY = zip(*self.path)
-			ax.plot(pathX, pathY, 'g-')
+			ax.plot(pathX, pathY, 'go-')
     
 		if(displayTree):
 			lineCol = mc.LineCollection(self.tree, linewidths=0.5, colors='lightblue')
