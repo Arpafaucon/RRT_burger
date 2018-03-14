@@ -28,29 +28,64 @@
 
 namespace burger_local_planner
 {
-
-const float L = 0.160;         ///< distance between middle of wheels
-const float ACC_MAX = 0.01;    ///< Max speed variation between two rounds (only when increasing)
-const float SPEED_MAX = 0.18;  ///< Max linear speed (m/s)
-const float SPEED_MIN = 0.05;  ///< Min linear speed
-const float OMEGA_MAX = 2.840; ///< Mas angular velocit (rad/s)
 const float PI = 3.1415926535;
-const float WHEEL_MAX_SPEED = SPEED_MAX * 0.9;
-const float SPEED_FACTOR = 0.05;
-
-const float Kp = 0.5;
-const float Ki = 0.1;
-const float Kd = 0.00;
 
 class BurgerTrajectoryFinder
 {
 public:
+  /**
+   * \brief distance between middle of wheels
+   */
+  float _L_;
+  /**
+   * \brief Max speed variation between two rounds (only when increasing)
+   */
+  float _ACC_MAX_;
+  /**
+   * \brief Max linear speed (m/s)
+   */
+  float _SPEED_MAX_;
+  /**
+   * \brief Min linear speed
+   */
+  float _SPEED_MIN_;
+  /**
+   * \brief Max angular velocity (rad/s)
+   */
+  float _OMEGA_MAX_;
+  /**
+   * \brief
+   */
+  float _WHEEL_MAX_SPEED_;
+  /**
+   * \brief
+   */
+  float _SPEED_FACTOR_;
+  /**
+   * \brief PID param : proportionnal
+   */
+  float _Kp_;
+  /**
+   * \brief PID param : integrator
+   */
+  float _Ki_;
+  /**
+   * \brief PID param : derivative
+   */
+  float _Kd_;
+
+
   BurgerTrajectoryFinder();
 
   base_local_planner::Trajectory findBestPath(Eigen::Vector3f goal, Eigen::Vector3f pose, float deltaTime, bool isLastGoal, bool allowReverse);
   Eigen::Vector3f computeNewPositions(const Eigen::Vector3f &pos, const Eigen::Vector3f &vel, double dt);
   void initialize();
   void initialize(Eigen::Vector3f initialPose);
+  /**
+   * \brief sets up internal params
+   * Allows configuration from external sources : files, rosparam
+   */
+  bool setInternalParams(float L, float ACC_MAX, float SPEED_MAX, float SPEED_MIN, float OMEGA_MAX, float SPEED_FACTOR, float pid_Kp, float pid_Ki, float pid_Kd);
 
 private:
   float xPos_[2], yPos_[2], thetaPos_[2];

@@ -53,11 +53,11 @@ base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vecto
     {
         xGoal_ = goal[0];
         yGoal_ = goal[1];
-        ROS_INFO_DEBUG("Trajectory finder got new goal");
+        ROS_INFO("Trajectory finder got new goal");
     }
 
     // thetaGoal_ = goal(2);
-    float requestedSpeed = SPEED_FACTOR * sqrt(pow((xGoal_ - xPos_[1]) / deltaTime, 2) + pow((yGoal_ - yPos_[1]) / deltaTime, 2));
+    float requestedSpeed = _SPEED_FACTOR_ * sqrt(pow((xGoal_ - xPos_[1]) / deltaTime, 2) + pow((yGoal_ - yPos_[1]) / deltaTime, 2));
 
     if (isLastGoal)
     {
@@ -159,51 +159,51 @@ base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vecto
     linearSpeed_[1] /= (1.0 + 8 * abs(thetaDiffNow));
 
     // Here, we cap the acceleration of the robot discritly by ACC_MAX, then the speed by it's maximum
-    if (linearSpeed_[1] - linearSpeed_[0] >= ACC_MAX)
+    if (linearSpeed_[1] - linearSpeed_[0] >= _ACC_MAX_)
     {
-        linearSpeed_[1] = linearSpeed_[0] + ACC_MAX;
+        linearSpeed_[1] = linearSpeed_[0] + _ACC_MAX_;
     }
 
-    if (linearSpeed_[1] > SPEED_MAX)
+    if (linearSpeed_[1] > _SPEED_MAX_)
     {
-        linearSpeed_[1] = SPEED_MAX;
+        linearSpeed_[1] = _SPEED_MAX_;
     }
 
-    if (linearSpeed_[1] < SPEED_MIN)
+    if (linearSpeed_[1] < _SPEED_MIN_)
     {
-        linearSpeed_[1] = SPEED_MIN;
+        linearSpeed_[1] = _SPEED_MIN_;
     }
 
-    omegap_[2] = Kp * thetaDiffNow;
-    omegai_[2] = omegai_[0] + Ki * (deltaTime / 2.0) * (thetaDiffNow + thetaDiffPrev);
-    omegad_[2] = -omegad_[0] + Kd * (2.0 / deltaTime) * (thetaDiffNow - thetaDiffPrev);
+    omegap_[2] = _Kp_ * thetaDiffNow;
+    omegai_[2] = omegai_[0] + _Ki_ * (deltaTime / 2.0) * (thetaDiffNow + thetaDiffPrev);
+    omegad_[2] = -omegad_[0] + _Kd_ * (2.0 / deltaTime) * (thetaDiffNow - thetaDiffPrev);
     omega_ = omegad_[2] + omegai_[2] + omegap_[2];
 
-    if (omega_ > OMEGA_MAX)
+    if (omega_ > _OMEGA_MAX_)
     {
-        omega_ = OMEGA_MAX;
+        omega_ = _OMEGA_MAX_;
     }
 
-    if (omega_ < -OMEGA_MAX)
+    if (omega_ < -_OMEGA_MAX_)
     {
-        omega_ = -OMEGA_MAX;
+        omega_ = -_OMEGA_MAX_;
     }
 
-    speedRight_ = linearSpeed_[1] + (omega_ * L) / 2.0;
-    speedLeft_ = linearSpeed_[1] - (omega_ * L) / 2.0;
+    speedRight_ = linearSpeed_[1] + (omega_ * _L_) / 2.0;
+    speedLeft_ = linearSpeed_[1] - (omega_ * _L_) / 2.0;
 
-    if (abs(speedLeft_) > WHEEL_MAX_SPEED)
+    if (abs(speedLeft_) > _WHEEL_MAX_SPEED_)
     {
-        speedLeft_ *= WHEEL_MAX_SPEED / abs(speedLeft_);
-        speedRight_ *= WHEEL_MAX_SPEED / abs(speedLeft_);
-        linearSpeed_[1] = speedLeft_ + (omega_ * L) / 2.0;
+        speedLeft_ *= _WHEEL_MAX_SPEED_ / abs(speedLeft_);
+        speedRight_ *= _WHEEL_MAX_SPEED_ / abs(speedLeft_);
+        linearSpeed_[1] = speedLeft_ + (omega_ * _L_) / 2.0;
     }
 
-    if (abs(speedRight_) > WHEEL_MAX_SPEED)
+    if (abs(speedRight_) > _WHEEL_MAX_SPEED_)
     {
-        speedLeft_ *= WHEEL_MAX_SPEED / abs(speedRight_);
-        speedRight_ *= WHEEL_MAX_SPEED / abs(speedRight_);
-        linearSpeed_[1] = speedLeft_ + (omega_ * L) / 2.0;
+        speedLeft_ *= _WHEEL_MAX_SPEED_ / abs(speedRight_);
+        speedRight_ *= _WHEEL_MAX_SPEED_ / abs(speedRight_);
+        linearSpeed_[1] = speedLeft_ + (omega_ * _L_) / 2.0;
     }
 
     traj.xv_ = linearSpeed_[1];
@@ -249,5 +249,21 @@ Eigen::Vector3f BurgerTrajectoryFinder::computeNewPositions(const Eigen::Vector3
     new_pos[1] = pos[1] + (vel[0] * sin(pos[2]) + vel[1] * sin(M_PI_2 + pos[2])) * dt;
     new_pos[2] = pos[2] + vel[2] * dt;
     return new_pos;
+}
+
+bool BurgerTrajectoryFinder::setInternalParams(float L, float ACC_MAX, float SPEED_MAX, float SPEED_MIN, float OMEGA_MAX, float SPEED_FACTOR, float pid_Kp, float pid_Ki, float pid_Kd)
+{
+    _L_ = L;
+    _ACC_MAX_ = ACC_MAX;
+    _SPEED_MAX_ = SPEED_MAX;
+    _SPEED_MIN_ = SPEED_MIN;
+    _WHEEL_MAX_SPEED_ = SPEED_MAX * 0.9;
+    _OMEGA_MAX_ = OMEGA_MAX;
+    _SPEED_FACTOR_ = SPEED_FACTOR;
+    _Kp_ = pid_Kp;
+    _Ki_ = pid_Ki;
+    _Kd_ = pid_Kd;
+
+    ROS_WARN_STREAM("Internal params : " << L << "," << ACC_MAX << "," << SPEED_MAX << "," << SPEED_MIN << "," << OMEGA_MAX << "," << SPEED_FACTOR << "," << pid_Kp << "," <<pid_Ki << "," << pid_Kd);
 }
 }

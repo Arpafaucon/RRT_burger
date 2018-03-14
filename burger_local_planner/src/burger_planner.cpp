@@ -126,9 +126,25 @@ BurgerPlanner::BurgerPlanner(std::string name, base_local_planner::LocalPlannerU
                                                                                                      alignment_costs_(planner_util->getCostmap())
 {
   ros::NodeHandle private_nh("~/" + name);
+  private_nh.setParam("dummyLocalParam", true);
   localGoalIndex_ = 0;
 
   burger_trajectory_finder_.initialize();
+  // configuration of trajectory finder internal params
+  {
+    float L, accMax, speedMax, speedMin, omegaMax, speedFactor, Kp, Ki, Kd;
+    private_nh.param("L", L, DF_L);
+    private_nh.param("acc_max", accMax, DF_ACC_MAX);
+    private_nh.param("speed_max", speedMax, DF_SPEED_MAX);
+    private_nh.param("speed_min", speedMin, DF_SPEED_MIN);
+    private_nh.param("omega_max", omegaMax, DF_OMEGA_MAX);
+    private_nh.param("speed_factor", speedFactor, DF_SPEED_FACTOR);
+    private_nh.param("pid_kp", Kp, DF_Kp);
+    private_nh.param("pid_ki", Ki, DF_Ki);
+    private_nh.param("pid_kd", Kd, DF_Kd);
+
+    burger_trajectory_finder_.setInternalParams(L, accMax, speedMax, speedMin, omegaMax, speedFactor, Kp, Ki, Kd);
+  }
 
   goal_front_costs_.setStopOnFailure(false);
   alignment_costs_.setStopOnFailure(false);
