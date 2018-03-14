@@ -1,3 +1,14 @@
+#########################################################
+#														#
+# RRT planner Makefile									#
+# NOTE : Make cannot build ROS-related executables		#
+# This Makefile can only be used:						#
+#	- to build the 'rrtstar' standalone program			#
+#	- as shortcut for some frequently used commands 	#
+#														#
+#########################################################
+
+# 
 CXX=g++
 CC=gcc
 # define needed headers files
@@ -15,18 +26,15 @@ OBJ= $(patsubst %, $(O_DIR)/%, $(_OBJ))
 CFLAGS=-g -I $(I_DIR)
 BUILD_DIR=.
 
-# A obj/.o file depends on src/.c and src/.files
-# he is created by compiled the coreesponding .c
+# Compiling the .c files -> .o
 $(O_DIR)/%.o: $(SRC_DIR)/%.c $(DEPS)
 	$(CXX) -c -o $@ $< $(CFLAGS)
 
-# A obj/.o file depends on src/.c and src/.files
-# he is created by compiled the coreesponding .c
+# Compiling .cpp -> .o
 $(O_DIR)/%.o: $(SRC_DIR)/%.cpp $(DEPS)
 	$(CXX) -c -o $@ $< $(CFLAGS) -std=c++11
 
 rrtstar: $(OBJ)
-	echo $(I_DIR)
 	$(CXX) -o $(BUILD_DIR)/$@ $^ $(CFLAGS)
 
 .PHONY: clean doc mrproper viz debug rosTest cmd
@@ -40,23 +48,18 @@ cmd:
 rosTest: 
 	roslaunch ./test.launch
 
-
-
+# Run the standalone program
 run: rrtstar
 	./rrtstar
-
-debug:
-	(roslaunch simulation/tworld.launch)&
-	(roslaunch simulation/navigation.launch)
-
+# Visualization of .sol files
 viz:
 	python viz/viz.py exp/basicExp-ros.sol
 
-clean:
-	$(RM) build/*
-
 doc: 
 	doxygen doxy/doxy.conf
+
+clean:
+	$(RM) build/*
 
 mrproper: clean
 	$(RM) rrtstar
