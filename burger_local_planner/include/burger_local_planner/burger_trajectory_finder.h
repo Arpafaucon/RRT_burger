@@ -30,6 +30,9 @@ namespace burger_local_planner
 {
 const float PI = 3.1415926535;
 
+/**
+ * \brief Internal engine for trajectories
+ */
 class BurgerTrajectoryFinder
 {
 public:
@@ -54,11 +57,11 @@ public:
    */
   float _OMEGA_MAX_;
   /**
-   * \brief
+   * \brief max linear speed of one wheel
    */
   float _WHEEL_MAX_SPEED_;
   /**
-   * \brief
+   * \brief Multiplicative factor applied to computed output speed
    */
   float _SPEED_FACTOR_;
   /**
