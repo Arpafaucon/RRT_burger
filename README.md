@@ -22,7 +22,19 @@ For the moment, it provides a adaptable RRTS engine, and numerous clients progra
 - a ROS plugin
 - a standalone ROS node using the plugin.  
 
-## Useful references
+## Documentation
+
+Both packages have a `README.md`.
+
+Additionnaly, both packages have doxygen configured : run
+```sh
+doxygen doxy.conf
+```
+or simply
+```sh
+make doc
+```
+to generate a pretty html code API.
 
 ### How-to
 

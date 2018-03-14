@@ -26,6 +26,9 @@ OBJ= $(patsubst %, $(O_DIR)/%, $(_OBJ))
 CFLAGS=-g -I $(I_DIR)
 BUILD_DIR=.
 
+warning:
+	@echo "This makefile cannot build the package. Use catkin_make instead"
+
 # Compiling the .c files -> .o
 $(O_DIR)/%.o: $(SRC_DIR)/%.c $(DEPS)
 	$(CXX) -c -o $@ $< $(CFLAGS)
@@ -56,7 +59,7 @@ viz:
 	python viz/viz.py exp/basicExp-ros.sol
 
 doc: 
-	doxygen doxy/doxy.conf
+	doxygen doxy.conf
 
 clean:
 	$(RM) build/*
