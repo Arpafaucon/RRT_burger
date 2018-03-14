@@ -26,7 +26,7 @@
 #define MAX_ITERATION 5000
 #define PUBLISH_MARKERS true
 #define GOAL_BIAS 0.1
-#define GOAL_SIZE 3
+#define GOAL_SIZE 0.1
 #define RRTS_GAMMA 0.5
 #define VERBOSE true
 #define ROBOT_RADIUS 0.05

@@ -7,15 +7,15 @@
 		<!-- size (in m) of a grid cell -->
 		<param name="res" value="0.1"/>
 		<!-- these are for rrts_ros -->
-		<param name="RRTPlanner/goal_bias" value="0.7172"/>
 		<param name="RRTPlanner/publish_markers" value="true"/>
+		<param name="RRTPlanner/verbose" value="true"/>
 		<param name="RRTPlanner/max_iteration" value="5002"/>
 		<param name="RRTPlanner/rrts_gamma" value="0.5"/>
 		<param name="RRTPlanner/goal_size" value="0.2"/>
-		<param name="RRTPlanner/verbose" value="true"/>
 		<!-- these are for system_ros -->
+		<param name="RRTPlanner/goal_bias" value="0.4"/>
 		<param name="RRTPlanner/waypoint_distance" value="0.2"/>
 		<param name="RRTPlanner/robot_radius" value="0.05"/>
-		<param name="RRTPlanner/discretization_step" value="0.005"/>
+		<param name="RRTPlanner/discretization_step" value="0.01"/>
 	</node>
 </launch>

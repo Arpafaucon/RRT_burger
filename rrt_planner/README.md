@@ -111,6 +111,26 @@ Th main objective of the project was **to develop a motion planning plugin for R
 
 The plugin implements the `NavCore::BaseGlobalPlanner` plugin interface.
 
+### Parameters
+
+The planner reads the following parameters out of the `ROS Parameter Server`. They are expected in the **private plugin namespace**: 
+
+
+
+| name              | type      | Description                                       |Default| Unit |
+| -------------     |:------    | :------------                                     |-----: | :--- |
+|`verbose`          | bool      | enable plugin verbose output                      | true  | 
+|`publish_markers`  | bool      | enable pusblishing visual markers for Rviz        | true  | 
+|`max_iteration`    | int       | max iteration number                              | 5000  | 
+|`rrts_gamma`       | double    | gamma parameter of the planner                    | 0.5   | 
+|`goal_size`        | double    | tolerancy around given goal state                 | 0.1   | m
+|`goal_bias`        | double    | (S) goal bias factor in RRTS                          | 0.1   | m
+|`waypoint_distance`| double    | (S) max distance between two states                   | 0.1   | m
+|`robot_radius`     | double    | (S) Robot radius                                      | 0.05  | m
+|`discretization_step`|double   | (S) Integration step (affects collion test precision) | 0.01  | m
+
+Parameters tagged with (s) are directly transmitted to `system_ros`. Only a distance conversion operation is performed.
+
 ### Testing :  rrt_planner_tester node
 
 The `test_ros` files define a ROS node that creates and fills a ROS `costmap_2d::Costmap2D` object, using an `.exp` configuration files (mentionned above). It then calls the global planner interface, and writes the resulting plan in a file following the `.sol` conventions.
