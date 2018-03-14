@@ -117,19 +117,21 @@ The planner reads the following parameters out of the `ROS Parameter Server`. Th
 
 
 
-| name              | type      | Description                                       |Default| Unit |
-| -------------     |:------    | :------------                                     |-----: | :--- |
-|`verbose`          | bool      | enable plugin verbose output                      | true  | 
-|`publish_markers`  | bool      | enable pusblishing visual markers for Rviz        | true  | 
-|`max_iteration`    | int       | max iteration number                              | 5000  | 
-|`rrts_gamma`       | double    | gamma parameter of the planner                    | 0.5   | 
-|`goal_size`        | double    | tolerancy around given goal state                 | 0.1   | m
-|`goal_bias`        | double    | (S) goal bias factor in RRTS                          | 0.1   | m
-|`waypoint_distance`| double    | (S) max distance between two states                   | 0.1   | m
-|`robot_radius`     | double    | (S) Robot radius                                      | 0.05  | m
-|`discretization_step`|double   | (S) Integration step (affects collion test precision) | 0.01  | m
+ name              | type      | Description                                       |Default| Unit 
+ -------------     |:------    | :------------                                     |-----: | :--- 
+`verbose`          | bool      | enable plugin verbose output                      | true  | .
+`publish_markers`  | bool      | enable pusblishing visual markers for Rviz        | true  | .
+`max_iteration`    | int       | max iteration number                              | 5000  | .
+`rrts_gamma`       | double    | gamma parameter of the planner                    | 0.5   | .
+`goal_size`        | double    | tolerancy around given goal state                 | 0.1   | m
+`goal_bias`        | double    | (S) goal bias factor in RRTS                          | 0.1   | m
+`waypoint_distance`| double    | (S) max distance between two states                   | 0.1   | m
+`robot_radius`     | double    | (S) Robot radius                                      | 0.05  | m
+`discretization_step`|double   | (S) Integration step (affects collion test precision) | 0.01  | m
 
 Parameters tagged with (s) are directly transmitted to `system_ros`. Only a distance conversion operation is performed.
+
+`test.launch` is a good example of how to set these parameters.
 
 ### Testing :  rrt_planner_tester node
 
