@@ -99,7 +99,7 @@ int main(int argc, char **argv)
 	//   tf::TransformListener tfl(&n);
 	tf::TransformListener tfl;
 	ROS_INFO("Created TransformListener");
-	costmap_2d::Costmap2DROS costmap_ros(std::string("testWrapper"), tfl);
+	costmap_2d::Costmap2DROS costmap_ros(std::string("emulated_costmap"), tfl);
 	ROS_INFO("Created CostMap2DROS");
 	geometry_msgs::PoseStamped start;
 	geometry_msgs::PoseStamped end;
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
 	*(costmap_ros.getCostmap()) = costmap;
 
 	rrts_burger::RRTPlanner planner;
-	planner.initialize(std::string("testPlanner"), &costmap_ros);
+	planner.initialize(std::string("RRTPlanner"), &costmap_ros);
 	ROS_INFO("Initialized");
 
 	// start.pose.position.x = 0;

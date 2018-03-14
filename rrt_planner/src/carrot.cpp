@@ -1,5 +1,5 @@
 #include <pluginlib/class_list_macros.h>
-#include "rrt_planner/rrt.h"
+#include "rrt_planner/carrot.h"
 
 //register this planner as a BaseGlobalPlanner plugin
 PLUGINLIB_EXPORT_CLASS(rrt_planner::RRTPlanner, nav_core::BaseGlobalPlanner)
