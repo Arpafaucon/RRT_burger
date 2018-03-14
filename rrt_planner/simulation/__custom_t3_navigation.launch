@@ -24,7 +24,13 @@
     <rosparam file="$(find turtlebot3_navigation)/param/local_costmap_params.yaml" command="load" />
     <rosparam file="$(find turtlebot3_navigation)/param/global_costmap_params.yaml" command="load" />
     <rosparam file="$(find turtlebot3_navigation)/param/move_base_params.yaml" command="load" />
-    <rosparam file="$(find turtlebot3_navigation)/param/dwa_local_planner_params.yaml" command="load" />
+    <!-- <rosparam file="$(find turtlebot3_navigation)/param/dwa_local_planner_params.yaml" command="load" /> -->
+
+    <!-- args for the global planner -->
+    <param name="RRTPlanner/goal_bias" value="0.7172"/>
+		<param name="RRTPlanner/publish_markers" value="true"/>
+		<param name="RRTPlanner/max_iteration" value="5002"/>
+		<param name="RRTPlanner/waypoint_distance" value="0.2"/>
 
     <remap from="cmd_vel" to="$(arg cmd_vel_topic)"/>
     <remap from="odom" to="$(arg odom_topic)"/>
