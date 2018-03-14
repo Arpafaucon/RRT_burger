@@ -21,6 +21,17 @@
 
 #define SPACE_DIM 2
 
+// these are the default values
+#define WAYPOINT_DISTANCE 0.1
+#define MAX_ITERATION 5000
+#define PUBLISH_MARKERS true
+#define GOAL_BIAS 0.1
+#define GOAL_SIZE 3
+#define RRTS_GAMMA 0.5
+#define VERBOSE true
+#define ROBOT_RADIUS 0.05
+#define DISCRETIZATION_STEP 0.01
+
 using std::string;
 
 typedef RRTstar::Planner<Burger2D::State2, Burger2D::Trajectory, Burger2D::System> planner_t;
@@ -112,6 +123,14 @@ class RRTPlanner : public nav_core::BaseGlobalPlanner
 	planner_t *planner_ = NULL;
 
 	/**
+	 * \brief enable plugin verbose output
+	 */
+	bool verbose_;
+	/**
+	 * \brief enable pusblishing visual markers for Rviz
+	 */
+	bool publishMarkers_;
+	/**
 	 * \brief path publisher (rviz markers)
 	 */
 	ros::Publisher markerPub_;
@@ -124,10 +143,52 @@ class RRTPlanner : public nav_core::BaseGlobalPlanner
 	 * Could be useful to ensure uniqueness of msgs
 	 */
 	unsigned int msgIndex_ = 0;
+	
+	/**
+	 * \brief goal bias factor in RRTS
+	 * 
+	 * This setting is transmitted to system_ros
+	 */
+	double goalBias_;
+	/**
+	 * \brief max iteration number
+	 */
+	int maxIteration_;
+	/**
+	 * \brief max length between two states
+	 * Transmitted to system_ros
+	 */
+	double waypointDistance_;
+
+	/**
+	 * \brief gamma parameter of the planner
+	 */
+	double rrtsGamma_;
+
+	/**
+	 * \brief tolerancy around given goal state
+	 * To be given in costmap cells. goalBoxSize = goalSize_*CostmapResolution
+	 */
+	int goalSize_;
+
+	/**
+	 * \brief Robot radius (in m)
+	 * Transmitted to system_ros
+	 */
+	double robotRadius_;
+
+	/**
+	 * \brief Discrete length of integration when computing next state on a path
+	 * TRansmitted to system_ros
+	 */
+	double discretizationStep_;
+
 	/**
 	 * \brief clears a cell of the costmap
 	 */
 	void clearRobotCell(const unsigned int mx, const unsigned int my);
+
+
 };
 };
 #endif

@@ -8,8 +8,7 @@
 using namespace std;
 using namespace Burger2D;
 
-#define DISCRETIZATION_STEP 0.01
-#define COSTMAP_OCCUPIED 128
+
 
 region2::region2()
 {
@@ -198,11 +197,11 @@ bool System::IsInCollision(double *stateIn)
 		return true;
 	}
 
-	region2 footprint();
+	region2 footprint;
 	footprint.center[0] = stateIn[0];
 	footprint.center[1] = stateIn[1];
-	footprint.size[0] = ROBOT_RADIUS;
-	footprint.size[1] = ROBOT_RADIUS;
+	footprint.size[0] = robotRadiusCells_;
+	footprint.size[1] = robotRadiusCells_;
 	return IsInCollision(footprint);
 	// for (list<region2 *>::iterator iter = obstacles.begin(); iter != obstacles.end(); iter++)
 	// {
@@ -246,11 +245,22 @@ int System::sampleState(State2 &randomStateOut)
 {
 
 	// randomStateOut.setNumDimensions(numDimensions);
-	ROS_INFO_THROTTLE(2, "regionOperating_ : size = %lf, %lf ; center %lf,%lf", regionOperating_.size[0], regionOperating_.size[1], regionOperating_.center[0], regionOperating_.center[0]);
-	for (int i = 0; i < numDimensions_; i++)
+	// ROS_INFO_THROTTLE(2, "regionOperating_ : size = %lf, %lf ; center %lf,%lf", regionOperating_.size[0], regionOperating_.size[1], regionOperating_.center[0], regionOperating_.center[0]);
+	bool goalBiased = (rand() < RAND_MAX * goalBias_);
+	if (goalBiased)
 	{
+		for (int i = 0; i < numDimensions_; i++)
+		{
+			randomStateOut.x[i] = regionGoal_.center[i];
+		}
+	}
+	else
+	{
+		for (int i = 0; i < numDimensions_; i++)
+		{
 
-		randomStateOut.x[i] = (double)rand() / (RAND_MAX + 1.0) * regionOperating_.size[i] - regionOperating_.size[i] / 2.0 + regionOperating_.center[i];
+			randomStateOut.x[i] = (double)rand() / (RAND_MAX + 1.0) * regionOperating_.size[i] - regionOperating_.size[i] / 2.0 + regionOperating_.center[i];
+		}
 	}
 
 	if (IsInCollision(randomStateOut.x))
@@ -258,6 +268,12 @@ int System::sampleState(State2 &randomStateOut)
 
 	return 1;
 }
+
+double System::setRobotRadius(double radius)
+{
+	return robotRadiusCells_ = radius / (costmap_->getResolution());
+}
+
 
 int System::extendTo(State2 &stateFromIn, State2 &stateTowardsIn, Trajectory &trajectoryOut, bool &exactConnectionOut)
 {
@@ -270,18 +286,18 @@ int System::extendTo(State2 &stateFromIn, State2 &stateTowardsIn, Trajectory &tr
 		distTotal += dists[i] * dists[i];
 	distTotal = sqrt(distTotal);
 
-	static const int DIST_MAX_BT_POINTS = 5.0;
+	// static const int DIST_MAX_BT_POINTS = 5.0;
 
 	State2 newTowardState = stateTowardsIn;
-	if (distTotal >= DIST_MAX_BT_POINTS)
+	if (distTotal >= waypointDistance_)
 	{
 		for (int i = 0; i < numDimensions_; i++)
-			newTowardState.x[i] = dists[i] * DIST_MAX_BT_POINTS / distTotal + stateFromIn.x[i];
+			newTowardState.x[i] = dists[i] * waypointDistance_ / distTotal + stateFromIn.x[i];
 
-		distTotal = DIST_MAX_BT_POINTS;
+		distTotal = waypointDistance_;
 	}
 
-	double incrementTotal = distTotal / DISCRETIZATION_STEP;
+	double incrementTotal = distTotal / discretizationStep_;
 
 	// normalize the distance according to the disretization step
 	for (int i = 0; i < numDimensions_; i++)
@@ -380,4 +396,9 @@ bool System::worldToMap(double wx, double wy, double &mx, double &my)
 		return true;
 
 	return false;
+}
+
+double System::convertDistance(double distanceWorld)
+{
+	return distanceWorld / costmap_->getResolution();
 }

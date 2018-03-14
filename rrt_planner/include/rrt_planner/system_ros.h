@@ -9,8 +9,11 @@
 #include <costmap_2d/costmap_2d_ros.h>
 #include <costmap_2d/costmap_2d.h>
 
-#define DISCRETIZATION_STEP 0.01
-#define ROBOT_RADIUS 0.05
+
+// #define ROBOT_RADIUS 0.05
+#define COSTMAP_OCCUPIED 128
+
+
 namespace Burger2D
 {
 
@@ -185,6 +188,7 @@ private:
    */
   bool initalized_;
 
+
   /**
    * Used in 'mapToworld' & 'worldToMap': 
    * if 0.0 -> world coordinates are the bottom left corner
@@ -193,6 +197,26 @@ private:
   double convert_offset_ = 0.5;
 
 public:
+  /**
+   * \brief security radius around robot center point
+   * Used to determine if a state is in collision
+   */
+  double robotRadiusCells_;
+  /**
+   * \brief probability that the random state will be the goal
+   */
+  double goalBias_ = 0.1;
+  /**
+   * \brief max distance between two waypoint states
+   */
+  double waypointDistance_;
+
+  /**
+   * \brief integration step when computing new state when following a constant control
+   * Collision is tested every discretizationStep
+   */
+  double discretizationStep_;
+
   /**
   * \brief collision check
   * 
@@ -205,6 +229,16 @@ public:
    * Checks if the given region intersects an obstacle $
    */
   bool IsInCollision(region2 region);
+
+  /**
+   * \brief set robot radius
+   * Radius is used to determine a 'safe region' when computing collisions.
+   * If radius=0 the robot is considered ponctual
+   * 
+   * \param radius radius in m
+   * \return computed distance in cells
+   */
+  double setRobotRadius(double radius);
 
   /*!
          * \brief The goal region
@@ -341,6 +375,16 @@ public:
          *
          */
   int getTrajectory(State2 &stateFromIn, State2 &stateToIn, std::list<double *> &trajectoryOut);
+
+
+  /**
+   * \brief convert a world distance into costmap distance
+   * 
+   * \param distanceWorld distance in world coordintates
+   * 
+   * \return distance in costmap coordinates
+   */
+  double convertDistance(double distanceWorld);
 };
 }
 
