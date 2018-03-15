@@ -57,7 +57,7 @@ base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vecto
     }
 
     // thetaGoal_ = goal(2);
-    float requestedSpeed = _SPEED_FACTOR_ * sqrt(pow((xGoal_ - xPos_[1]) / deltaTime, 2) + pow((yGoal_ - yPos_[1]) / deltaTime, 2));
+    float requestedSpeed = _SPEED_MIN_ + _SPEED_FACTOR_ * sqrt(pow((xGoal_ - xPos_[1]) / deltaTime, 2) + pow((yGoal_ - yPos_[1]) / deltaTime, 2));
 
     if (isLastGoal)
     {
