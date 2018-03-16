@@ -22,6 +22,14 @@ For the moment, it provides a adaptable RRTS engine, and numerous clients progra
 - a ROS plugin
 - a standalone ROS node using the plugin.  
 
+## Prerequisites
+
+The planners need a complete PC setup as described in the *Turtlebot3* installation manual. 
+You must therefore check that the following package stacks are installed and built: 
+- turtlebot3
+- turtlebot3_msgs
+- turtlebot3_simulations
+
 ## Documentation
 
 Both packages have a `README.md`.

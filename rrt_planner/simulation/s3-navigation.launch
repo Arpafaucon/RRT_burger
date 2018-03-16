@@ -1,6 +1,6 @@
 <launch>
     <arg name="map_file" value="$(find rrt_planner)/simulation/map.yaml"/>
-    <include file="$(find rrt_planner)/navigation/burger_navigation.launch">
+    <include file="$(find rrt_planner)/navigation/launch/burger_navigation.launch">
         <arg name="map_file" value="$(arg map_file)"/>
     </include>
 </launch>
