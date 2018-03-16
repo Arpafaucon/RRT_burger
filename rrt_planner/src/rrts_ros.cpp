@@ -96,6 +96,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	burgerSystem->robotRadiusCells_= burgerSystem->convertDistance(robotRadius_);
 	burgerSystem->goalBias_ = goalBias_;
 	burgerSystem->waypointDistance_ = burgerSystem->convertDistance(waypointDistance_);
+	double goalSizeCells = burgerSystem->convertDistance(goalSize_);
 	burgerSystem->discretizationStep_ = burgerSystem->convertDistance(discretizationStep_);
 
 	planner_t *rrts = new planner_t();
@@ -119,8 +120,8 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	Burger2D::region2 goalRegion;
 	goalRegion.center[0] = goal_x;
 	goalRegion.center[1] = goal_y;
-	goalRegion.size[0] = goalSize_;
-	goalRegion.size[1] = goalSize_;
+	goalRegion.size[0] = goalSizeCells;
+	goalRegion.size[1] = goalSizeCells;
 	burgerSystem->regionGoal_ = goalRegion;
 
 	Burger2D::region2 operatingRegion;

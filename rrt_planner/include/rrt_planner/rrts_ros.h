@@ -169,7 +169,7 @@ class RRTPlanner : public nav_core::BaseGlobalPlanner
 	 * \brief tolerancy around given goal state
 	 * To be given in costmap cells. goalBoxSize = goalSize_*CostmapResolution
 	 */
-	int goalSize_;
+	double goalSize_;
 
 	/**
 	 * \brief Robot radius (in m)
