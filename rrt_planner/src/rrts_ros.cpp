@@ -98,6 +98,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	burgerSystem->waypointDistance_ = burgerSystem->convertDistance(waypointDistance_);
 	double goalSizeCells = burgerSystem->convertDistance(goalSize_);
 	burgerSystem->discretizationStep_ = burgerSystem->convertDistance(discretizationStep_);
+	ROS_INFO_COND(verbose_, "Converted dustances to costmap referential rr=%lf wd=%lf ds=%lf gs=%lf", burgerSystem->robotRadiusCells_, burgerSystem->waypointDistance_, goalSizeCells, burgerSystem->discretizationStep_);
 
 	planner_t *rrts = new planner_t();
 	planner_ = rrts;
