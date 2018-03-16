@@ -115,6 +115,9 @@ install(FILES carrot_plugin.xml
 DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
+install(FILES navigation/launch/burger_navigation.launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
+
 
 
 

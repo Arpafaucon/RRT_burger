@@ -56,7 +56,7 @@ void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS *costmap_
 
 		if(goalSize_ < robotRadius_*2)
 		{
-			ROS_ERROR("The goal region is too small for the robot, planning will always fail. Adjust robot_radius & goal_size values")
+			ROS_ERROR("The goal region is too small for the robot, planning will always fail. Adjust robot_radius & goal_size values");
 		}
 
 		ROS_WARN_STREAM(
@@ -264,6 +264,7 @@ bool RRTPlanner::formatPlan(std::list<double *> stateListIn, std::vector<geometr
 	}
 
 	ROS_INFO_STREAM("RRT Star finished filling plan (entries: " << planOut.size() << " )");
+	return true;
 }
 
 void RRTPlanner::clearRobotCell(unsigned int mx, unsigned int my)
