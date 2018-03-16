@@ -54,6 +54,11 @@ void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS *costmap_
 		nodeHandle.param("robot_radius", robotRadius_, ROBOT_RADIUS);
 		nodeHandle.param("discretization_step", discretizationStep_, DISCRETIZATION_STEP);
 
+		if(goalSize_ < robotRadius_*2)
+		{
+			ROS_ERROR("The goal region is too small for the robot, planning will always fail. Adjust robot_radius & goal_size values")
+		}
+
 		ROS_WARN_STREAM(
 			"got node params : "
 			<< "\n\tgoalBias=" << goalBias_

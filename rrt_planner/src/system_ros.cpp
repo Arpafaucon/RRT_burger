@@ -204,8 +204,13 @@ bool System::isReachingTarget(State2 &stateIn)
 	for (int i = 0; i < numDimensions_; i++)
 	{
 		ROS_INFO_THROTTLE(2, "regienGoal_.center[i] = %lf and statein.x[i] = %lf", regionGoal_.center[i], stateIn.x[i]);
-		if (fabs(stateIn.x[i] - regionGoal_.center[i]) > regionGoal_.size[i] / 2.0)
+		// punctual version
+		// if (fabs(stateIn.x[i] - regionGoal_.center[i]) > regionGoal_.size[i] / 2.0)
+		// 	return false;
+		// solid version
+		if (fabs(stateIn.x[i] - regionGoal_.center[i]) > (regionGoal_.size[i] / 2.0) - robotRadiusCells_)
 			return false;
+
 	}
 
 	return true;
@@ -251,9 +256,9 @@ bool System::IsInCollision(double *stateIn)
 
 bool System::IsInCollision(region2 region)
 {
-	for (unsigned int cx = region.center[0] - region.size[0]; cx <= region.center[0] + region.size[0]; cx++)
+	for (unsigned int cx = region.center[0] - region.size[0]/2.; cx <= region.center[0] + region.size[0]/2.; cx++)
 	{
-		for (unsigned int cy = region.center[1] - region.size[1]; cy <= region.center[1] + region.size[1]; cy++)
+		for (unsigned int cy = region.center[1] - region.size[1]/2.; cy <= region.center[1]/2. + region.size[1]; cy++)
 		{
 			int cost = costmap_->getCost(cx, cy);
 			if (cost >= costmap_2d::LETHAL_OBSTACLE)
