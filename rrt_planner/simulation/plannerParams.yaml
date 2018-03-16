@@ -18,6 +18,7 @@ BurgerPlannerROS/speed_max   : 0.18
 BurgerPlannerROS/speed_min   : 0.05
 BurgerPlannerROS/omega_max   : 2.84
 BurgerPlannerROS/speed_factor: 00.05
-BurgerPlannerROS/pid_kp: 0.5
+BurgerPlannerROS/pid_kp: 0.8
 BurgerPlannerROS/pid_ki: 0.1
-BurgerPlannerROS/pid_kd: 0
+BurgerPlannerROS/pid_kd: 0.1
+BurgerPlannerROS/tau: 30.0

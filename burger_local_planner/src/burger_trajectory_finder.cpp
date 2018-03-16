@@ -156,7 +156,7 @@ base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vecto
 
     // In order to prefer rotation over linear speed, we apply a filter on linear_speed based on the diff of orientation
     // between the robot's attitude and its wanted attitude : thetaDiffNow
-    linearSpeed_[1] /= (1.0 + 8 * abs(thetaDiffNow));
+    linearSpeed_[1] /= (1.0 + _TAU_ * abs(thetaDiffNow));
 
     // Here, we cap the acceleration of the robot discritly by ACC_MAX, then the speed by it's maximum
     if (linearSpeed_[1] - linearSpeed_[0] >= _ACC_MAX_)
@@ -249,7 +249,7 @@ Eigen::Vector3f BurgerTrajectoryFinder::computeNewPositions(const Eigen::Vector3
     return new_pos;
 }
 
-bool BurgerTrajectoryFinder::setInternalParams(float L, float ACC_MAX, float SPEED_MAX, float SPEED_MIN, float OMEGA_MAX, float SPEED_FACTOR, float pid_Kp, float pid_Ki, float pid_Kd)
+bool BurgerTrajectoryFinder::setInternalParams(float L, float ACC_MAX, float SPEED_MAX, float SPEED_MIN, float OMEGA_MAX, float SPEED_FACTOR, float pid_Kp, float pid_Ki, float pid_Kd, float tau)
 {
     _L_ = L;
     _ACC_MAX_ = ACC_MAX;
@@ -261,7 +261,7 @@ bool BurgerTrajectoryFinder::setInternalParams(float L, float ACC_MAX, float SPE
     _Kp_ = pid_Kp;
     _Ki_ = pid_Ki;
     _Kd_ = pid_Kd;
-
-    ROS_WARN_STREAM("Internal params : " << L << "," << ACC_MAX << "," << SPEED_MAX << "," << SPEED_MIN << "," << OMEGA_MAX << "," << SPEED_FACTOR << "," << pid_Kp << "," << pid_Ki << "," << pid_Kd);
+    _TAU_ = tau;
+    ROS_WARN_STREAM("Internal params : " << L << "," << ACC_MAX << "," << SPEED_MAX << "," << SPEED_MIN << "," << OMEGA_MAX << "," << SPEED_FACTOR << "," << pid_Kp << "," << pid_Ki << "," << pid_Kd << "," << tau);
 }
 }

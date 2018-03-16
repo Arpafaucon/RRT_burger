@@ -132,7 +132,7 @@ BurgerPlanner::BurgerPlanner(std::string name, base_local_planner::LocalPlannerU
   burger_trajectory_finder_.initialize();
   // configuration of trajectory finder internal params
   {
-    float L, accMax, speedMax, speedMin, omegaMax, speedFactor, Kp, Ki, Kd;
+    float L, accMax, speedMax, speedMin, omegaMax, speedFactor, Kp, Ki, Kd, tau;
     private_nh.param("L", L, DF_L);
     private_nh.param("acc_max", accMax, DF_ACC_MAX);
     private_nh.param("speed_max", speedMax, DF_SPEED_MAX);
@@ -142,8 +142,9 @@ BurgerPlanner::BurgerPlanner(std::string name, base_local_planner::LocalPlannerU
     private_nh.param("pid_kp", Kp, DF_Kp);
     private_nh.param("pid_ki", Ki, DF_Ki);
     private_nh.param("pid_kd", Kd, DF_Kd);
+    private_nh.param("tau", tau, DF_TAU);
 
-    burger_trajectory_finder_.setInternalParams(L, accMax, speedMax, speedMin, omegaMax, speedFactor, Kp, Ki, Kd);
+    burger_trajectory_finder_.setInternalParams(L, accMax, speedMax, speedMin, omegaMax, speedFactor, Kp, Ki, Kd, tau);
   }
 
   goal_front_costs_.setStopOnFailure(false);

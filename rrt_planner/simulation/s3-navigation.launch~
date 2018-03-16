@@ -1,5 +1,5 @@
 <launch>
     <include file="$(find rrt_planner)/simulation/__custom_t3_navigation.launch">
-        <arg name="map_file" value="$(HOME)/ROSmaps/map16-03.yaml"/>
+        <arg name="map_file" value="$HOME/ROSmaps/map16-03.yaml"/>
     </include>
 </launch>
