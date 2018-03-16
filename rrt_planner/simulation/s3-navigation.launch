@@ -1,5 +1,6 @@
 <launch>
-    <include file="$(find rrt_planner)/simulation/__custom_t3_navigation.launch">
-        <arg name="map_file" value="$(find rrt_planner)/simulation/map.yaml"/>
+    <arg name="map_file" value="$(find rrt_planner)/simulation/map.yaml"/>
+    <include file="$(find rrt_planner)/navigation/burger_navigation.launch">
+        <arg name="map_file" value="$(arg map_file)"/>
     </include>
 </launch>
