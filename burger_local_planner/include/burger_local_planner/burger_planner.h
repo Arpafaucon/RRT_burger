@@ -70,6 +70,7 @@
 #define DF_OMEGA_MAX 2.840f ///< Mas angular velocit (rad/s)
 // #define DF_WHEEL_MAX_SPEED = SPEED_MAX * 0.9;
 #define DF_SPEED_FACTOR 0.05f
+#define DF_TAU 8.0f
 
 #define DF_Kp 0.5f
 #define DF_Ki 0.1f
@@ -77,8 +78,8 @@
 
 namespace burger_local_planner
 {
-const float MIN_RADIUS = 0.1F;
-const float RADIUS = 0.80F;                   ///< The radius around the robot within which points from the global_plan can be considered as valid intermediary goal.
+const float MIN_RADIUS = 0.01F;
+const float RADIUS = 0.30F;                   ///< The radius around the robot within which points from the global_plan can be considered as valid intermediary goal.
 const float SQUARED_RADIUS = RADIUS * RADIUS; ///< The radius is squared to simplify calculus on vectors.
 
 /**

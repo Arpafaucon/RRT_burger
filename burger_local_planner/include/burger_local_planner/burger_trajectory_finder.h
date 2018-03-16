@@ -77,6 +77,10 @@ public:
    */
   float _Kd_;
 
+  /**
+  * \brief Filtering param for first order on speed with thetadiffnows
+  */
+  float _TAU_;
 
   BurgerTrajectoryFinder();
 
@@ -88,7 +92,7 @@ public:
    * \brief sets up internal params
    * Allows configuration from external sources : files, rosparam
    */
-  bool setInternalParams(float L, float ACC_MAX, float SPEED_MAX, float SPEED_MIN, float OMEGA_MAX, float SPEED_FACTOR, float pid_Kp, float pid_Ki, float pid_Kd);
+  bool setInternalParams(float L, float ACC_MAX, float SPEED_MAX, float SPEED_MIN, float OMEGA_MAX, float SPEED_FACTOR, float pid_Kp, float pid_Ki, float pid_Kd, float tau);
 
 private:
   float xPos_[2], yPos_[2], thetaPos_[2];

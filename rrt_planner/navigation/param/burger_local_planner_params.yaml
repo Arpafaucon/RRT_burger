@@ -22,7 +22,7 @@ BurgerPlannerROS:
 
 # Goal Tolerance Parametes
   yaw_goal_tolerance: 3.14
-  xy_goal_tolerance: 0.10
+  xy_goal_tolerance: 0.05
 
 # Forward Simulation Parameters
   sim_time: 3.5

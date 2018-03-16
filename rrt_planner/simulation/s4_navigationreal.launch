@@ -1,0 +1,5 @@
+<launch>
+    <include file="$(find rrt_planner)/navigation/burger_navigation.launch">
+        <arg name="map_file" value="/home/lix/ROSmaps/map16-03-2.yaml"/>
+    </include>
+</launch>
