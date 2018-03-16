@@ -279,10 +279,12 @@ void BurgerPlanner::updatePlanAndLocalCosts(
     const std::vector<geometry_msgs::PoseStamped> &new_plan)
 {
   global_plan_.resize(new_plan.size());
+  visited_plan_.resize(new_plan.size());
+  ROS_INFO("Reset global plan");
   for (unsigned int i = 0; i < new_plan.size(); ++i)
   {
     global_plan_[i] = new_plan[i];
-    localGoalIndex_ = 0;
+    visited_plan_[i] = 0;
   }
 
   // costs for going away from path
@@ -357,56 +359,42 @@ base_local_planner::Trajectory BurgerPlanner::findBestPath(
   float current_distance_to_goal_from_intermediary;
   bool first_point = true;
 
-  // geometry_msgs::PoseStamped next_point_pose = global_plan_.at(localGoalIndex_);
-
-  // Eigen::Vector3f next_point(next_point_pose.pose.position.x, next_point_pose.pose.position.y, tf::getYaw(next_point_pose.pose.orientation));
-
-  // Eigen::Vector3f diff_to_robot = next_point - pos;
-  // float distance_to_robot = diff_to_robot(0) * diff_to_robot(0) + diff_to_robot(1) * diff_to_robot(1);
-
-  // while (distance_to_robot <= SQUARED_RADIUS && localGoalIndex_ < global_plan_.size())
-  // {
-  //   localGoalIndex_++;
-  //   next_point_pose = global_plan_.at(localGoalIndex_);
-
-  //   next_point[0] = next_point_pose.pose.position.x;
-  //   next_point[1] = next_point_pose.pose.position.y;
-  //   next_point[2] = tf::getYaw(next_point_pose.pose.orientation);
-
-  //   diff_to_robot = next_point - pos;
-  //   distance_to_robot = diff_to_robot(0) * diff_to_robot(0) + diff_to_robot(1) * diff_to_robot(1);
-  // }
-  // ROS_INFO("LocalGoalIndex = %d", localGoalIndex_);
-  // goal = next_point;
-
+  int count = 0;
+  int selected_goal = 0;
+  float distance_to_selected_goal = 0.0F;
   for (std::vector<geometry_msgs::PoseStamped>::iterator it = global_plan_.begin(); it != global_plan_.end(); it++)
   {
     Eigen::Vector3f it_point(it->pose.position.x, it->pose.position.y, tf::getYaw(it->pose.orientation));
     Eigen::Vector3f diff_to_robot = it_point - pos;
     float distance_to_robot = diff_to_robot(0) * diff_to_robot(0) + diff_to_robot(1) * diff_to_robot(1);
 
+    if (visited_plan_[count])
+    {
+      count++;
+      continue;
+    }
+
     // If the point is within a radius around the robot, it can be considered for the goal, if it is the closest to the real goal.
     if (distance_to_robot <= SQUARED_RADIUS)
     {
       goal = it_point;
       first_point = false;
-      /* ANOTHER STRATEGY
-      Eigen::Vector3f diff_to_goal = true_goal - it_point;
-      float distance_to_goal = diff_to_goal(0) * diff_to_goal(0) + diff_to_goal(1) * diff_to_goal(1);
-
-      if (distance_to_goal < current_distance_to_goal_from_intermediary || first_point)
-      {
-        current_distance_to_goal_from_intermediary = distance_to_goal;
-        goal = it_point;
-        if (current_distance_to_goal_from_intermediary < 10e-5)
-        {
-          ROS_INFO("Goal in sight!!");
-        }
-        first_point = false;
-      }
-      */
+      selected_goal = count;
+      distance_to_selected_goal = distance_to_robot;
     }
+    count++;
   }
+
+  if (distance_to_selected_goal <= MIN_RADIUS && selected_goal < count - 1)
+  {
+    ROS_INFO("Trorororor");
+    visited_plan_[selected_goal] = 1;
+    // global_plan_.erase(global_plan_.begin() + selected_goal);
+    geometry_msgs::PoseStamped next_point_pose = global_plan_.at(selected_goal + 1);
+    Eigen::Vector3f next_point(next_point_pose.pose.position.x, next_point_pose.pose.position.y, tf::getYaw(next_point_pose.pose.orientation));
+    goal = next_point;
+  }
+
   if (first_point)
   {
     // This means that no point from the global_plan_ was close enough to the robot. We might want to ask for a new global plan...
@@ -414,18 +402,6 @@ base_local_planner::Trajectory BurgerPlanner::findBestPath(
   }
 
   base_local_planner::LocalPlannerLimits limits = planner_util_->getCurrentLimits();
-
-  // prepare cost functions and generators for this run
-  // generator_.initialise(pos,
-  //                       vel,
-  //                       goal,
-  //                       &limits,
-  //                       vsamples_);
-
-  // result_traj_.cost_ = -7;
-  // // find best trajectory by sampling and scoring the samples
-  // std::vector<base_local_planner::Trajectory> all_explored;
-  // scored_sampling_planner_.findBestTrajectory(result_traj_, &all_explored);
 
   bool isTrueGoal = goal == true_goal;
   bool allowReverse = false;
@@ -435,40 +411,8 @@ base_local_planner::Trajectory BurgerPlanner::findBestPath(
 
   if (cost < 0)
   {
-    ROS_WARN("INVALID TRAJECTORY AMAURY YOU MOTHERFUCKER!");
+    ROS_WARN("Invalid trajectory");
   }
-
-#if 0 
-  if (publish_traj_pc_)
-  {
-    base_local_planner::MapGridCostPoint pt;
-    traj_cloud_->points.clear();
-    traj_cloud_->width = 0;
-    traj_cloud_->height = 0;
-    std_msgs::Header header;
-    pcl_conversions::fromPCL(traj_cloud_->header, header);
-    header.stamp = ros::Time::now();
-    traj_cloud_->header = pcl_conversions::toPCL(header);
-    for (std::vector<base_local_planner::Trajectory>::iterator t = all_explored.begin(); t != all_explored.end(); ++t)
-    {
-      if (t->cost_ < 0)
-        continue;
-      // Fill out the plan
-      for (unsigned int i = 0; i < t->getPointsSize(); ++i)
-      {
-        double p_x, p_y, p_th;
-        t->getPoint(i, p_x, p_y, p_th);
-        pt.x = p_x;
-        pt.y = p_y;
-        pt.z = 0;
-        pt.path_cost = p_th;
-        pt.total_cost = t->cost_;
-        traj_cloud_->push_back(pt);
-      }
-    }
-    traj_cloud_pub_.publish(*traj_cloud_);
-  }
-#endif
 
   // verbose publishing of point clouds
   if (publish_cost_grid_pc_)

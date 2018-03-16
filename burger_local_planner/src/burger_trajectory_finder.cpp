@@ -227,8 +227,6 @@ base_local_planner::Trajectory BurgerTrajectoryFinder::findBestPath(Eigen::Vecto
         pose = computeNewPositions(pose, velocity, dt);
     }
 
-    // TO DO : add score trajectory with obstacles!!
-
     // Now, we should increase one step in our memory:
     xPos_[0] = xPos_[1];
     yPos_[0] = yPos_[1];
@@ -264,6 +262,6 @@ bool BurgerTrajectoryFinder::setInternalParams(float L, float ACC_MAX, float SPE
     _Ki_ = pid_Ki;
     _Kd_ = pid_Kd;
 
-    ROS_WARN_STREAM("Internal params : " << L << "," << ACC_MAX << "," << SPEED_MAX << "," << SPEED_MIN << "," << OMEGA_MAX << "," << SPEED_FACTOR << "," << pid_Kp << "," <<pid_Ki << "," << pid_Kd);
+    ROS_WARN_STREAM("Internal params : " << L << "," << ACC_MAX << "," << SPEED_MAX << "," << SPEED_MIN << "," << OMEGA_MAX << "," << SPEED_FACTOR << "," << pid_Kp << "," << pid_Ki << "," << pid_Kd);
 }
 }

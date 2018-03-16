@@ -63,22 +63,22 @@
 
 #include <nav_msgs/Path.h>
 
-#define DF_L            0.160f   ///< distance between middle of wheels
-#define DF_ACC_MAX      0.01f    ///< Max speed variation between two rounds (only when increasing)
-#define DF_SPEED_MAX    0.18f    ///< Max linear speed (m/s)
-#define DF_SPEED_MIN    0.05f    ///< Min linear speed
-#define DF_OMEGA_MAX    2.840f   ///< Mas angular velocit (rad/s)
+#define DF_L 0.160f         ///< distance between middle of wheels
+#define DF_ACC_MAX 0.01f    ///< Max speed variation between two rounds (only when increasing)
+#define DF_SPEED_MAX 0.18f  ///< Max linear speed (m/s)
+#define DF_SPEED_MIN 0.05f  ///< Min linear speed
+#define DF_OMEGA_MAX 2.840f ///< Mas angular velocit (rad/s)
 // #define DF_WHEEL_MAX_SPEED = SPEED_MAX * 0.9;
 #define DF_SPEED_FACTOR 0.05f
 
-#define DF_Kp           0.5f
-#define DF_Ki           0.1f
-#define DF_Kd           0.00f
+#define DF_Kp 0.5f
+#define DF_Ki 0.1f
+#define DF_Kd 0.00f
 
 namespace burger_local_planner
 {
-
-const float RADIUS = 0.50F;                   ///< The radius around the robot within which points from the global_plan can be considered as valid intermediary goal.
+const float MIN_RADIUS = 0.1F;
+const float RADIUS = 0.80F;                   ///< The radius around the robot within which points from the global_plan can be considered as valid intermediary goal.
 const float SQUARED_RADIUS = RADIUS * RADIUS; ///< The radius is squared to simplify calculus on vectors.
 
 /**
@@ -178,6 +178,8 @@ class BurgerPlanner
     double forward_point_distance_;
 
     std::vector<geometry_msgs::PoseStamped> global_plan_;
+
+    std::vector<int> visited_plan_;
 
     boost::mutex configuration_mutex_;
     pcl::PointCloud<base_local_planner::MapGridCostPoint> *traj_cloud_;
