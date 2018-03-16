@@ -199,6 +199,7 @@ public:
    * Used to determine if a state is in collision
    */
   double robotRadiusCells_;
+  
   /**
    * \brief probability that the random state will be the goal
    */
