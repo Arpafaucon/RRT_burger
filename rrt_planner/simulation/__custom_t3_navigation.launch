@@ -24,31 +24,9 @@
     <rosparam file="$(find turtlebot3_navigation)/param/local_costmap_params.yaml" command="load" />
     <rosparam file="$(find turtlebot3_navigation)/param/global_costmap_params.yaml" command="load" />
     <rosparam file="$(find turtlebot3_navigation)/param/move_base_params.yaml" command="load" />
-    <rosparam file="$(find turtlebot3_navigation)/param/burger_local_planner_params.yaml" command="load" />
-
-    <!-- args for the global planner -->
-		<!-- these are for rrts_ros -->
-		<param name="RRTPlanner/publish_markers" value="true"/>
-		<param name="RRTPlanner/verbose" value="true"/>
-		<param name="RRTPlanner/max_iteration" value="7002"/>
-		<param name="RRTPlanner/rrts_gamma" value="0.5"/>
-		<param name="RRTPlanner/goal_size" value="0.2"/>
-		<!-- these are for rrts_ros & transmitted to system_ros -->
-		<param name="RRTPlanner/goal_bias" value="0.4"/>
-		<param name="RRTPlanner/waypoint_distance" value="0.2"/>
-		<param name="RRTPlanner/robot_radius" value="0.08"/>
-		<param name="RRTPlanner/discretization_step" value="0.01"/>
-
-    <!-- args for the local planner -->
-    <param name="BurgerPlannerROS/L"        value="0.16"/>
-    <param name="BurgerPlannerROS/acc_max"  value="0.01"/>
-    <param name="BurgerPlannerROS/speed_max"    value="0.18"/>
-    <param name="BurgerPlannerROS/speed_min"    value="0.05"/>
-    <param name="BurgerPlannerROS/omega_max"    value="2.84"/>
-    <param name="BurgerPlannerROS/speed_factor" value="00.05"/>
-    <param name="BurgerPlannerROS/pid_kp" value="0.5"/>
-    <param name="BurgerPlannerROS/pid_ki" value="0.1"/>
-    <param name="BurgerPlannerROS/pid_kd" value="0"/>
+    <rosparam file="$(find rrt_planner)/simulation/burger_local_planner_params.yaml" command="load" />
+    <rosparam file="$(find rrt_planner)/simulation/plannerParams.yaml" command="load" />
+    <!-- <rosparam file="$(find turtlebot3_navigation)/param/dwa_local_planner_params.yaml" command="load" /> -->
 
     <remap from="cmd_vel" to="$(arg cmd_vel_topic)"/>
     <remap from="odom" to="$(arg odom_topic)"/>

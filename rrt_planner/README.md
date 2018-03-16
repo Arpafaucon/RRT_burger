@@ -177,13 +177,27 @@ You must therefore check that the following package stacks are installed and bui
 
 The needed `launch` files are in the `simulation` folder. 
 
+```sh
+# Gazebo simulation engine + visual client
+roslaunch simulation/s1-gazebo.launch
+# pre-configured Rviz visualisation 
+roslaunch simulation/s2-rviz.launch
+# pre-configured move_base with the right planners
+roslaunch simulation/s3-navigation.launch
 ```
-roslaunch simulation/tworld.launch
-roslaunch simulation/navigation.launch
-```
+
+The launch rder isn't crucial, but seems to reduce crash/error chances.
+
+#### Parameters
+
+Plugin parameters are specified in `simulation/plannerParams.yaml`. Namespaces are as follows : 
+Parameter name      | plugin
+:---                | :---
+RRTPLanner/*        | Global Planner
+BurgerPlannerROS/*  | Local Planner
 
 ### Visualization 
 
 In addition to returning the path to the caller, the plugin publish rviz `Markers` to present its results. Those can be found on the follwing topics : 
 - `rrts_ros_path` gives additionnal visual informations on the path found. The boxes define a *safe zone* around each waypoint.
-- `rrts_ros_tree` gives additionnal visual informations on the RRT tree. IT should display the final tree, but some unknown issues still have to be solved. 
+- `rrts_ros_tree` gives additionnal visual informations on the RRT tree. It should display the final tree, but some unknown issues still have to be solved. 

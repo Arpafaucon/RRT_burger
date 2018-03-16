@@ -9,10 +9,8 @@
 #include <costmap_2d/costmap_2d_ros.h>
 #include <costmap_2d/costmap_2d.h>
 
-
 // #define ROBOT_RADIUS 0.05
 #define COSTMAP_OCCUPIED 128
-
 
 namespace Burger2D
 {
@@ -48,7 +46,7 @@ public:
 
   /**
    * \brief box constructor
-   */ 
+   */
   region2(double xleft, double xright, double ybottom, double yup);
 
   /*!
@@ -171,7 +169,7 @@ public:
 class System
 {
 private:
-/**
+  /**
  * \brief fixed to 2D
  */
   static const int numDimensions_ = 2;
@@ -187,7 +185,6 @@ private:
    * \brief status of the system
    */
   bool initalized_;
-
 
   /**
    * Used in 'mapToworld' & 'worldToMap': 
@@ -251,7 +248,6 @@ public:
          *
          */
   region2 regionOperating_;
-
 
   /*!
          * \brief System constructor
@@ -376,7 +372,6 @@ public:
          */
   int getTrajectory(State2 &stateFromIn, State2 &stateToIn, std::list<double *> &trajectoryOut);
 
-
   /**
    * \brief convert a world distance into costmap distance
    * 
@@ -385,6 +380,22 @@ public:
    * \return distance in costmap coordinates
    */
   double convertDistance(double distanceWorld);
+
+  /**
+   * \brief cartesian distance between two states
+   */
+  double distance(State2 &s1, State2 &s2);
+
+  /**
+   * \brief cartesian distance between two states
+   */
+  double distance(double *s1, double *s2);
+
+  /**
+   * \brief splines and interpolates the states list
+   * 
+   */
+  bool splineStateList(std::list<double *> &stateListIn, std::list<double *> &splinedListOut);
 };
 }
 

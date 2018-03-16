@@ -8,8 +8,6 @@
 using namespace std;
 using namespace Burger2D;
 
-
-
 region2::region2()
 {
 }
@@ -166,6 +164,32 @@ System::~System()
 // 	return 1;
 // }
 
+double System::distance(State2 &s1, State2 &s2)
+{
+	double *dists = new double[numDimensions_];
+	for (int i = 0; i < numDimensions_; i++)
+		dists[i] = s1.x[i] - s2.x[i];
+
+	double distTotal = 0.0;
+	for (int i = 0; i < numDimensions_; i++)
+		distTotal += dists[i] * dists[i];
+	distTotal = sqrt(distTotal);
+	return distTotal;
+}
+
+double System::distance(double *s1, double *s2)
+{
+	double *dists = new double[numDimensions_];
+	for (int i = 0; i < numDimensions_; i++)
+		dists[i] = s1[i] - s2[i];
+
+	double distTotal = 0.0;
+	for (int i = 0; i < numDimensions_; i++)
+		distTotal += dists[i] * dists[i];
+	distTotal = sqrt(distTotal);
+	return distTotal;
+}
+
 int System::getStateKey(State2 &stateIn, double *stateKey)
 {
 
@@ -273,7 +297,6 @@ double System::setRobotRadius(double radius)
 {
 	return robotRadiusCells_ = radius / (costmap_->getResolution());
 }
-
 
 int System::extendTo(State2 &stateFromIn, State2 &stateTowardsIn, Trajectory &trajectoryOut, bool &exactConnectionOut)
 {
@@ -401,4 +424,44 @@ bool System::worldToMap(double wx, double wy, double &mx, double &my)
 double System::convertDistance(double distanceWorld)
 {
 	return distanceWorld / costmap_->getResolution();
+}
+
+bool System::splineStateList(std::list<double *> &stateListIn, std::list<double *> &splinedListOut)
+{
+	for (list<double *>::iterator iter = stateListIn.begin(); iter != stateListIn.end(); iter++)
+	{
+		double *stateRef = *iter;
+		// in all cases, adding the initial state
+		splinedListOut.push_back(stateRef);
+
+		// computing iterator on next element
+		list<double *>::iterator iterNext = iter;
+		iterNext++;
+		if (iterNext != stateListIn.end())
+		{
+			// will test for need of intermediate points
+			double *stateNext = *(iterNext);
+
+			double dist = distance(stateRef, stateNext);
+			if (dist > waypointDistance_)
+			{
+				int nInterp = 1 + dist / waypointDistance_;
+				ROS_INFO("Would have needed interpolation d=%lf n=%d", dist, nInterp);
+				double distX = (stateNext[0] - stateRef[0]) / nInterp;
+				double distY = (stateNext[1] - stateRef[1]) / nInterp;
+				for (int i = 1; i < nInterp; i++)
+				{
+					double *state = new double[2];
+					state[0] = stateRef[0] + i * distX;
+					state[1] = stateRef[1] + i * distY;
+					splinedListOut.push_back(state);
+				}
+			}
+			else
+			{
+				ROS_INFO("no interp : d=%lf refD=%lf", dist, waypointDistance_);
+			}
+		}
+	}
+	return true;
 }
