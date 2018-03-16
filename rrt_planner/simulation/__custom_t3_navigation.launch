@@ -24,7 +24,7 @@
     <rosparam file="$(find turtlebot3_navigation)/param/local_costmap_params.yaml" command="load" />
     <rosparam file="$(find turtlebot3_navigation)/param/global_costmap_params.yaml" command="load" />
     <rosparam file="$(find turtlebot3_navigation)/param/move_base_params.yaml" command="load" />
-    <!-- <rosparam file="$(find turtlebot3_navigation)/param/dwa_local_planner_params.yaml" command="load" /> -->
+    <rosparam file="$(find turtlebot3_navigation)/param/burger_local_planner_params.yaml" command="load" />
 
     <!-- args for the global planner -->
 		<!-- these are for rrts_ros -->
