@@ -265,7 +265,7 @@ bool BurgerPlannerROS::burgerComputeVelocityCommands(tf::Stamped<tf::Pose> &glob
 
 bool BurgerPlannerROS::computeVelocityCommands(geometry_msgs::Twist &cmd_vel)
 {
-  // dispatches to either dwa/burger sampling control or stop and rotate control, depending on whether we have been close enough to goal
+  // dispatches to either burger sampling control or stop and rotate control, depending on whether we have been close enough to goal
   if (!costmap_ros_->getRobotPose(current_pose_))
   {
     ROS_ERROR("Could not get robot pose");

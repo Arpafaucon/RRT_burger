@@ -279,10 +279,12 @@ void BurgerPlanner::updatePlanAndLocalCosts(
     const std::vector<geometry_msgs::PoseStamped> &new_plan)
 {
   global_plan_.resize(new_plan.size());
+  visited_plan_.resize(new_plan.size());
+  ROS_INFO("Reset global plan");
   for (unsigned int i = 0; i < new_plan.size(); ++i)
   {
     global_plan_[i] = new_plan[i];
-    localGoalIndex_ = 0;
+    visited_plan_[i] = 0;
   }
 
   // costs for going away from path
@@ -357,28 +359,6 @@ base_local_planner::Trajectory BurgerPlanner::findBestPath(
   float current_distance_to_goal_from_intermediary;
   bool first_point = true;
 
-  // geometry_msgs::PoseStamped next_point_pose = global_plan_.at(localGoalIndex_);
-
-  // Eigen::Vector3f next_point(next_point_pose.pose.position.x, next_point_pose.pose.position.y, tf::getYaw(next_point_pose.pose.orientation));
-
-  // Eigen::Vector3f diff_to_robot = next_point - pos;
-  // float distance_to_robot = diff_to_robot(0) * diff_to_robot(0) + diff_to_robot(1) * diff_to_robot(1);
-
-  // while (distance_to_robot <= SQUARED_RADIUS && localGoalIndex_ < global_plan_.size())
-  // {
-  //   localGoalIndex_++;
-  //   next_point_pose = global_plan_.at(localGoalIndex_);
-
-  //   next_point[0] = next_point_pose.pose.position.x;
-  //   next_point[1] = next_point_pose.pose.position.y;
-  //   next_point[2] = tf::getYaw(next_point_pose.pose.orientation);
-
-  //   diff_to_robot = next_point - pos;
-  //   distance_to_robot = diff_to_robot(0) * diff_to_robot(0) + diff_to_robot(1) * diff_to_robot(1);
-  // }
-  // ROS_INFO("LocalGoalIndex = %d", localGoalIndex_);
-  // goal = next_point;
-
   int count = 0;
   int selected_goal = 0;
   float distance_to_selected_goal = 0.0F;
@@ -388,6 +368,12 @@ base_local_planner::Trajectory BurgerPlanner::findBestPath(
     Eigen::Vector3f diff_to_robot = it_point - pos;
     float distance_to_robot = diff_to_robot(0) * diff_to_robot(0) + diff_to_robot(1) * diff_to_robot(1);
 
+    if (visited_plan_[count])
+    {
+      count++;
+      continue;
+    }
+
     // If the point is within a radius around the robot, it can be considered for the goal, if it is the closest to the real goal.
     if (distance_to_robot <= SQUARED_RADIUS)
     {
@@ -395,27 +381,15 @@ base_local_planner::Trajectory BurgerPlanner::findBestPath(
       first_point = false;
       selected_goal = count;
       distance_to_selected_goal = distance_to_robot;
-      /* ANOTHER STRATEGY
-      Eigen::Vector3f diff_to_goal = true_goal - it_point;
-      float distance_to_goal = diff_to_goal(0) * diff_to_goal(0) + diff_to_goal(1) * diff_to_goal(1);
-
-      if (distance_to_goal < current_distance_to_goal_from_intermediary || first_point)
-      {
-        current_distance_to_goal_from_intermediary = distance_to_goal;
-        goal = it_point;
-        if (current_distance_to_goal_from_intermediary < 10e-5)
-        {
-          ROS_INFO("Goal in sight!!");
-        }
-        first_point = false;
-      }
-      */
     }
     count++;
   }
 
-  if (distance_to_selected_goal <= MIN_RADIUS && selected_goal < count)
+  if (distance_to_selected_goal <= MIN_RADIUS && selected_goal < count - 1)
   {
+    ROS_INFO("Trorororor");
+    visited_plan_[selected_goal] = 1;
+    // global_plan_.erase(global_plan_.begin() + selected_goal);
     geometry_msgs::PoseStamped next_point_pose = global_plan_.at(selected_goal + 1);
     Eigen::Vector3f next_point(next_point_pose.pose.position.x, next_point_pose.pose.position.y, tf::getYaw(next_point_pose.pose.orientation));
     goal = next_point;
