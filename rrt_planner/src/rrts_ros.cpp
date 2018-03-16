@@ -54,7 +54,16 @@ void RRTPlanner::initialize(std::string name, costmap_2d::Costmap2DROS *costmap_
 		nodeHandle.param("robot_radius", robotRadius_, ROBOT_RADIUS);
 		nodeHandle.param("discretization_step", discretizationStep_, DISCRETIZATION_STEP);
 
-		ROS_WARN_STREAM("got node params : " << goalBias_ << "," << publishMarkers_ << "," << maxIteration_ << "," << waypointDistance_ << "," << rrtsGamma_ << "," << goalSize_ << "," << verbose_ << "," << robotRadius_);
+		ROS_WARN_STREAM(
+			"got node params : "
+			<< "\n\tgoalBias=" << goalBias_
+			<< ",\n\tpublishMarkers=" << publishMarkers_
+			<< ",\n\tmaxIter=" << maxIteration_
+			<< ",\n\twaypointDistance=" << waypointDistance_
+			<< ",\n\tgamma=" << rrtsGamma_
+			<< ",\n\tgoalSize=" << goalSize_
+			<< ",\n\tverbose=" << verbose_
+			<< ",\n\trobotRadius=" << robotRadius_);
 
 		if (publishMarkers_)
 		{
@@ -82,7 +91,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	double wx, wy, rwx, rwy;
 	unsigned int start_x_i, start_y_i, goal_x_i, goal_y_i;
 	double start_x, start_y, goal_x, goal_y;
-	ROS_INFO("RRTS Star called");
+	ROS_INFO("Planner RRTS Star called");
 	if (planner_ != NULL)
 	{
 		delete planner_;
@@ -93,7 +102,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	}
 	Burger2D::System *burgerSystem = new Burger2D::System(costmap_);
 	// transmitting node params to system_ros
-	burgerSystem->robotRadiusCells_= burgerSystem->convertDistance(robotRadius_);
+	burgerSystem->robotRadiusCells_ = burgerSystem->convertDistance(robotRadius_);
 	burgerSystem->goalBias_ = goalBias_;
 	burgerSystem->waypointDistance_ = burgerSystem->convertDistance(waypointDistance_);
 	double goalSizeCells = burgerSystem->convertDistance(goalSize_);
@@ -103,7 +112,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	planner_t *rrts = new planner_t();
 	planner_ = rrts;
 	system_ = burgerSystem;
-	ROS_INFO_COND(verbose_, "BurgerRRT is making a plan");
+	// ROS_INFO_COND(verbose_, "BurgerRRT is making a plan");
 
 	wx = goal.pose.position.x;
 	wy = goal.pose.position.y;
@@ -136,7 +145,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	ROS_INFO_COND(verbose_, "Read costmap dimension %d %d", sizeX, sizeY);
 
 	rrts->setSystem(*burgerSystem);
-	ROS_INFO_COND(verbose_, "RRTS Star set sytem");
+	// ROS_INFO_COND(verbose_, "RRTS Star set sytem");
 
 	// parsing start position
 	wx = start.pose.position.x;
@@ -147,7 +156,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 			"The robot's start position is off the global costmap. Planning will always fail, are you sure the robot has been properly localized? %d %d", start_x_i, start_y_i);
 		return false;
 	}
-	ROS_INFO_COND(verbose_, "RRTS Star got start");
+	// ROS_INFO_COND(verbose_, "RRTS Star got start");
 	burgerSystem->worldToMap(wx, wy, start_x, start_y);
 
 	burgerSystem->mapToWorld(start_x, start_y, rwx, rwy);
@@ -160,6 +169,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	rootState[1] = start_y;
 
 	//clear the starting cell within the costmap because we know it can't be an obstacle
+	// TODO : maybe clear all the robot footprint ?
 	tf::Stamped<tf::Pose> start_pose;
 	tf::poseStampedMsgToTF(start, start_pose);
 	clearRobotCell(start_x_i, start_y_i);
@@ -176,7 +186,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	//   values, such as 0.1, should recover the RRT.
 	rrts->setGamma(rrtsGamma_);
 
-	ROS_INFO_COND(verbose_, "RRT Star completerly initialized");
+	// ROS_INFO_COND(verbose_, "RRT Star completerly initialized");
 	// spinForDebug();
 
 	clock_t startTime = clock();
@@ -190,7 +200,7 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 			ROS_WARN_THROTTLE(1, "rrts.iteration failed error %d", error);
 		}
 		// ROS_INFO_COND(verbose_,"number of vertice : %d", rrts.numVertices);
-		ROS_INFO_THROTTLE(2, "burger iterating");
+		// ROS_INFO_THROTTLE(2, "burger iterating");
 	}
 
 	clock_t finishTime = clock();
@@ -200,20 +210,40 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 	{
 		ROS_WARN("rrts.getBestTrajectory failed");
 	}
-	ROS_INFO_COND(verbose_, "stateList length = %lu", stateList.size());
+	else
+	{
+
+		ROS_INFO_COND(verbose_, "stateList length = %lu", stateList.size());
+	}
 
 	ROS_INFO("RRT Start finished running  in %lf s", ((double)(finishTime - startTime)) / CLOCKS_PER_SEC);
 
+	// conversion and splining
+	formatPlan(stateList, plan);
+
+	if (publishMarkers_)
+	{
+		publishStatesRviz(stateList, &(rrts->listVertices));
+	}
+
+	ROS_INFO("Plan finished");
+	return true;
+}
+
+bool RRTPlanner::formatPlan(std::list<double *> stateListIn, std::vector<geometry_msgs::PoseStamped> &planOut)
+{
 	ros::Time plan_time = ros::Time::now();
 
 	// int stateIndex = 0;
+	std::list<double *> splinedList;
+	system_->splineStateList(stateListIn, splinedList);
 
-	for (list<double *>::iterator iter = stateList.begin(); iter != stateList.end(); iter++)
+	for (list<double *>::iterator iter = splinedList.begin(); iter != splinedList.end(); iter++)
 	{
 		ROS_INFO_THROTTLE(1, "added vertex in plan");
 		double *stateRef = *iter;
 		double world_x, world_y;
-		burgerSystem->mapToWorld(stateRef[0], stateRef[1], world_x, world_y);
+		system_->mapToWorld(stateRef[0], stateRef[1], world_x, world_y);
 		geometry_msgs::PoseStamped pose;
 		pose.header.stamp = plan_time;
 		pose.header.frame_id = frame_id_;
@@ -224,20 +254,11 @@ bool RRTPlanner::makePlan(const geometry_msgs::PoseStamped &start, const geometr
 		pose.pose.orientation.y = 0.0;
 		pose.pose.orientation.z = 0.0;
 		pose.pose.orientation.w = 1.0;
-		plan.push_back(pose);
+		planOut.push_back(pose);
 		// bool coll = system.IsInCollision(stateRef);
 	}
 
-	ROS_INFO_STREAM("RRT Star finished filling plan (entries: " << plan.size() << " )");
-
-	ROS_INFO_COND(verbose_, "Publishing to rviz...");
-	if (publishMarkers_)
-	{
-		publishStatesRviz(stateList, &(rrts->listVertices));
-	}
-
-	ROS_INFO("Plan finished");
-	return true;
+	ROS_INFO_STREAM("RRT Star finished filling plan (entries: " << planOut.size() << " )");
 }
 
 void RRTPlanner::clearRobotCell(unsigned int mx, unsigned int my)
@@ -267,7 +288,7 @@ void RRTPlanner::saveExpToFile(std::ofstream &out)
 		// system_->mapToWorld(stateRef[0], stateRef[1], world_x, world_y);
 		world_x = stateRef[0];
 		world_y = stateRef[1];
-		ROS_INFO_THROTTLE(1, "state: %lf,%lf\n", world_x, world_y);
+		// ROS_INFO_THROTTLE(1, "state: %lf,%lf\n", world_x, world_y);
 		out << "W " << world_x << " " << world_y << endl;
 	}
 	ROS_INFO_COND(verbose_, "filling tree : %d entries", planner_->numVertices);
@@ -301,6 +322,7 @@ bool RRTPlanner::publishStatesRviz(list<double *> &stateList, list<vertex_t *> *
 		ROS_ERROR("Invalid configuration. Unable to publish");
 		return false;
 	}
+
 	visualization_msgs::Marker marker;
 	marker.header.frame_id = frame_id_;
 	marker.header.stamp = ros::Time::now();
@@ -366,6 +388,44 @@ bool RRTPlanner::publishStatesRviz(list<double *> &stateList, list<vertex_t *> *
 		}
 		count++;
 	}
+	{
+
+		double world_x, world_y, size_x, size_y;
+		double scale = system_->convertDistance(1);
+		Burger2D::region2 regionGoal = system_->regionGoal_;
+		system_->mapToWorld(regionGoal.center[0], regionGoal.center[1], world_x, world_y);
+		size_x = regionGoal.size[0] / scale;
+		size_y = regionGoal.size[1] / scale;
+
+		geometry_msgs::Point pur, pul, pbr, pbl;
+		// for this RRT, squares have the size of the robot
+		pur.x = world_x + size_x;
+		pur.y = world_y + size_y;
+		pul.x = world_x - size_x;
+		pul.y = world_y + size_y;
+		pbr.x = world_x + size_x;
+		pbr.y = world_y - size_y;
+		pbl.x = world_x - size_x;
+		pbl.y = world_y - size_y;
+
+		marker.points.push_back(pul);
+		marker.points.push_back(pur);
+		marker.points.push_back(pur);
+		marker.points.push_back(pbr);
+		marker.points.push_back(pbr);
+		marker.points.push_back(pbl);
+		marker.points.push_back(pbl);
+		marker.points.push_back(pul);
+
+		std_msgs::ColorRGBA color;
+		color.g = 0.9;
+		color.a = 0.9;
+
+		for (int i = 0; i < 8; i++)
+		{
+			marker.colors.push_back(color);
+		}
+	}
 	ROS_INFO_COND(verbose_, "attempt to publish message with %d markers %lu", count, marker.points.size());
 	markerPub_.publish(marker);
 	ROS_INFO_COND(verbose_, "published shape");
@@ -421,6 +481,7 @@ bool RRTPlanner::publishStatesRviz(list<double *> &stateList, list<vertex_t *> *
 		treeMarkerPub_.publish(markerTree);
 		ROS_INFO_COND(verbose_, "published tree (%lu entries)", verticesList->size());
 	}
+
 	return true;
 }
 };

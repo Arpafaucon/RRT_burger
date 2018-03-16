@@ -184,9 +184,19 @@ class RRTPlanner : public nav_core::BaseGlobalPlanner
 	double discretizationStep_;
 
 	/**
+	 * \brief Save of last asked goal
+	 */
+	geometry_msgs::PoseStamped lastGoal_;
+
+	/**
 	 * \brief clears a cell of the costmap
 	 */
 	void clearRobotCell(const unsigned int mx, const unsigned int my);
+
+	/**
+	 * \brief builds the final plan given to move_base
+	 */
+	bool formatPlan(std::list<double *> stateListIn, std::vector<geometry_msgs::PoseStamped> &planOut);
 
 
 };
