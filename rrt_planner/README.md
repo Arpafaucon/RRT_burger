@@ -2,6 +2,23 @@
 
 NOTE : code documentation can be build with `make doc`
 
+- [General Structure](#general-structure)
+- [Standalone](#standalone)
+    - [How to run it](#how-to-run-it)
+        - [Input](#input)
+        - [Ouput](#ouput)
+    - [Displaying the results](#displaying-the-results)
+        - [Prequisites](#prequisites)
+        - [Usage](#usage)
+        - [Settings](#settings)
+- [ROS Plugin](#ros-plugin)
+    - [Internals](#internals)
+    - [Parameters](#parameters)
+    - [Testing :  rrt_planner_tester node](#testing-rrtplannertester-node)
+        - [Usage](#usage)
+        - [Parameters](#parameters)
+    - [Visualization](#visualization)
+
 ## General Structure
 
 The structure of programs using the RRT capabilities can be separated in 3 categories
@@ -161,40 +178,7 @@ The node accepts the following parameters :
 - `odir` : (string) The folder where to write the output `.sol` files
 - `res` : (double) The costmap resolution (size of a cell, in meters)
 
-### Simulation with Gazebo
 
-It is possible to setup a virtual experiment with gazebo to evaluate the planner in almost-real conditions. The computer simulates a fake robot (its **tf** tree, its laser scans, etc.), with which the planner plugin can be tested in its actual calling conditions (as a plugin, ie. a dynamically-bound library called by the `move_base` node).
-
-#### Prerequisites
-
-The simulation needs a complete PC setup as described in the *Turtlebot3* installation manual. 
-You must therefore check that the following package stacks are installed and built: 
-- turtlebot3
-- turtlebot3_msgs
-- turtlebot3_simulations
-
-#### Usage
-
-The needed `launch` files are in the `simulation` folder. 
-
-```sh
-# Gazebo simulation engine + visual client
-roslaunch simulation/s1-gazebo.launch
-# pre-configured Rviz visualisation 
-roslaunch simulation/s2-rviz.launch
-# pre-configured move_base with the right planners
-roslaunch simulation/s3-navigation.launch
-```
-
-The launch rder isn't crucial, but seems to reduce crash/error chances.
-
-#### Parameters
-
-Plugin parameters are specified in `simulation/plannerParams.yaml`. Namespaces are as follows : 
-Parameter name      | plugin
-:---                | :---
-RRTPLanner/*        | Global Planner
-BurgerPlannerROS/*  | Local Planner
 
 ### Visualization 
 

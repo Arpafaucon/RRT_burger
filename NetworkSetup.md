@@ -1,10 +1,25 @@
 # Network
 
+- [Setup](#setup)
+    - [Network topology](#network-topology)
+    - [Internet Access](#internet-access)
+    - [IP assignment](#ip-assignment)
+    - [Modified files](#modified-files)
+- [Troubleshoot](#troubleshoot)
+    - [Invalid time](#invalid-time)
+    - [ssh - Connection refused](#ssh---connection-refused)
+- [Setup an additional computer](#setup-an-additional-computer)
+    - [Connections : basic setup](#connections-basic-setup)
+    - [Connections : complex setup](#connections-complex-setup)
+        - [Identify interfaces](#identify-interfaces)
+        - [Identify default gateway](#identify-default-gateway)
+        - [Checking and editing routes](#checking-and-editing-routes)
+        - [Troubleshooting](#troubleshooting)
 ## Setup
 
 The Turtlebot3 has a Wi-Fi card, while the local PC computer has 2 Ethernet adapters.
 
-##### Network topology
+### Network topology
 
 To give the robot a perfect freedom of movement, the experiment setup is as follows:
 ```
@@ -13,33 +28,35 @@ ACCESS : INRIA internet access
     | DHCP - dynamic IP
 CLIENT : local PC 
     | Ethernet
-    | assigned IP : 10.0.0.2
+    | DHCP-assigned IP : 10.0.0.2
 ACCESS : router (hidden SSID, login tomate/cornichon, DHCP on 10.0.0.0/24)
     | Wi-Fi
-    | assigned IP : 10.0.0.4
+    | DHCP-assigned IP : 10.0.0.4
 CLIENT : Turtlebot
 ```
 
-##### Internet Access
+### Internet Access
 A direct consequence of this setup is that **only the local PC has an internet access**, in accordance to the rules of the INRIA lab.
 
-##### IP assignment
+### IP assignment
 
 Both clients expect the IP addresses to be given by the router. The configuration for reserved IP is in the router, in the `DHCP` section.
 
-##### Modified files
+
+
+### Modified files
 
 The Wi-Fi credentials are in Turtlebot's `/etc/network/interfaces` file.
 
 ## Troubleshoot
 
-##### Invalid time
+### Invalid time
 
 The DHCP won't properly work if devices have incoherent time. To solve this potential issue: 
 - **Router** : System Tools > Date & Time > click `get from PC`(that normally has a valid time)
 - **Turtlebot** : <code>sudo date --s "2017-12-05T16:06:56-0100</code>
 
-#### ssh - Connection refused 
+### ssh - Connection refused 
 
 Re-enable the launch of sshd (which runs the ssh server) at startup by running : 
 
@@ -55,11 +72,11 @@ Here is a description of a working solution (Ubuntu 16.04 LTS)
 It is possible to connect via wifi or ethernet to the experiment router. In this case, the router and the main PC will be reachable (with ping or ssh), but the device won't have any internet access (the router was set up without internet for security reasons).
 A more complex setup allows the device to also have an internet access : see below.
 
-#### Connections : complex setup
+### Connections : complex setup
 
 The computer is connected in WiFi to `eduroam`, and to the router by an ethernet cable.
 
-### Identify interfaces
+#### Identify interfaces
 
 ```sh
 ip link show
@@ -75,7 +92,7 @@ result :
 ```
 We identify the ethernet interface `enp2s0` and the WiFi inteface `wlp3s0`.
 
-### Identify default gateway
+#### Identify default gateway
 
 We need to know the ip address of the gateway of the network with Internet (in this example: `wlp3s0`).
 ```
@@ -92,7 +109,7 @@ The gateway address is in a line beginning by **default via** and mentioning **d
 
 Here : `192.168.1.1`
 
-### Checking and editing routes
+#### Checking and editing routes
 
 With the default configuration, the Linux kernel tends to privilege one interface over the other (usually the Ethernet one, because bandwith is faster ). We will tell the kernel to use Wlan for everything **_except_** for the robot subnet (for which Ethernet should be used). In short :
 - robot subnet (subnet 10.0.0/24)-> use `enp2s0`
@@ -111,7 +128,7 @@ ip route add 10.0.0/24 dev enp2s0
 ip route add default dev wl3ps0 via 192.168.1.1
 ```
 
-### Troubleshooting
+#### Troubleshooting
 To see the current routes, use
 ```sh
 ip route show
