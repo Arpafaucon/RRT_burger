@@ -4,7 +4,7 @@ This package is intended to provide enhanced version of path-planning algorithms
 
 The package also comes with a set of visualization tools and technique, demonstrated with working examples, to help develop a new path-planner.
 
-This is part of the P3A research project of Amaury Camus & Grégoire Roussel, under the supervision of Adina M. Panchea
+This is part of the P3A research project of **Amaury Camus & Grégoire Roussel**, under the supervision of **Adina M. Panchea**
 
 ## Burger Local Planner
 
